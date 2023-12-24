@@ -1,6 +1,7 @@
 [
-    {"Company":"IMERYS SA","Score":2,"detailpagelink":null},
-    {"Company":"AKZO NOBEL NV","Score":3,"detailpagelink":null},
-    {"Company":"ANGLO AMERICAN PLC","Score":4,"detailpagelink":null},
-    {"Company":"BEIERSDORF AG","Score":5,"detailpagelink":null}
+{"Company":"IMERYS SA","Score":2,"Scope 1":5.0,"Scope 2":10.0,"Scope 3":20.0,"Water consummed":30.0,"Pollution":2000.0,"Controversies":"YES"},
+{"Company":"AKZO NOBEL NV","Score":3,"Scope 1":28.0,"Scope 2":10.0,"Scope 3":40.0,"Water consummed":50.0,"Pollution":0.0,"Controversies":"NO"},
+{"Company":"ANGLO AMERICAN PLC","Score":4,"Scope 1":null,"Scope 2":null,"Scope 3":null,"Water consummed":null,"Pollution":null,"Controversies":null},
+{"Company":"BEIERSDORF AG","Score":5,"Scope 1":null,"Scope 2":null,"Scope 3":null,"Water consummed":null,"Pollution":null,"Controversies":null}
+
 ]
