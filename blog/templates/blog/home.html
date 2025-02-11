@@ -9,5 +9,70 @@
             <p>Assess and visualize companies' biodiversity footprints</p>
         </div>
     </section>
+    
+    <h2 class="company-list-title">Select a Company</h2>
+    
+    <form method="get" action="" class="search-form">
+        <input type="text" id="searchInput" class="search-input" placeholder="Search for companies" value="{{ query }}">
+    </form>
+    
+    <div class="scrollable-container" id="companyAccordion">
+        {% for company in companies %}
+            <div class="company-card">
+                <button class="company-card-header" type="button" data-target="#collapse{{ company.pk }}">
+                    <h5 class="company-name">
+                        {{ company.name }}
+                    </h5>
+                    <span class="badge">{{ company.company_biodiv.biodiversity_score }}</span>
+                </button>
+    
+                <div id="collapse{{ company.pk }}" class="company-details">
+                    <div class="details-row">
+                        <div class="detail">
+                            <strong>Sector:</strong> {{ company.sector }}<br>
+                            <strong>Last Update:</strong> {{ company.last_update|date:"Y-m" }}
+                        </div>
+    
+                        <div class="detail">
+                            <a href="{% url 'company_detail' company.pk %}" class="view-more-button">View More</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+    
+    <div class="add-company">
+        <a class="add-company-button" href="{% url 'add_company' %}">Add Company</a>
+    </div>
 </div>
+
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        // Search filter
+        const searchInput = document.getElementById('searchInput');
+        const companyCards = document.querySelectorAll('.company-card');
+
+        searchInput.addEventListener('input', function() {
+            const filter = searchInput.value.toLowerCase();
+            companyCards.forEach(function(card) {
+                const companyName = card.querySelector('.company-name').textContent.toLowerCase();
+                if (companyName.includes(filter)) {
+                    card.style.display = '';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        });
+
+        // Simple toggle for accordion
+        document.querySelectorAll('.company-card-header').forEach(button => {
+            button.addEventListener('click', () => {
+                const content = document.querySelector(button.getAttribute('data-target'));
+                content.classList.toggle('show');
+            });
+        });
+    });
+</script>
 {% endblock content %}
