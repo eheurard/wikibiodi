@@ -28,3 +28,7 @@ def add_company(request):
     else:
         form = CompanyForm()
     return render(request, 'blog/add_company.html', {'form': form})
+
+def company_general(request, company_id):
+    company = get_object_or_404(Company, pk=company_id)
+    return render(request, 'blog/company_general.html', {'company': company})

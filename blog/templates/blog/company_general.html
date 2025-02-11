@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2>Company Details</h2>
+    {% if company %}
+            <h3>{{ company.name }}</h3>
+            <p><strong>ISIN Number:</strong> {{ company.ISIN_number }}</p>
+            <p><strong>Ticker:</strong> {{ company.Ticker }}</p>
+            <p><strong>Sector:</strong> {{ company.sector }}</p>
+            <p><strong>Last Update:</strong> {{ company.last_update|date:"Y-m-d H:i" }}</p>
+    {% else %}
+        <p>No company selected.</p>
+    {% endif %}
+
+    <a href="{% url 'home' %}" class="btn btn-secondary mt-3">Back to Home</a>
+</div>
+{% endblock content %}

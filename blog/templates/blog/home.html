@@ -31,6 +31,7 @@
                         <div class="detail">
                             <strong>Sector:</strong> {{ company.sector }}<br>
                             <strong>Last Update:</strong> {{ company.last_update|date:"Y-m" }}
+                            <a href="{% url 'company_general' company.pk %}" class="btn btn-info">View Details</a>
                         </div>
                     </div>
                 </div>
@@ -64,11 +65,28 @@
 
         // Simple toggle for accordion
         document.querySelectorAll('.company-card-header').forEach(button => {
-            button.addEventListener('click', () => {
-                const content = document.querySelector(button.getAttribute('data-target'));
-                content.classList.toggle('show');
+        button.addEventListener('click', function () {
+            const content = this.nextElementSibling;
+            const isActive = content.classList.contains("show");
+
+            // Fermer tous les autres panels
+            document.querySelectorAll('.company-details').forEach(detail => {
+                detail.style.maxHeight = null;
+                detail.classList.remove("show");
             });
+
+            document.querySelectorAll('.company-card-header').forEach(btn => {
+                btn.classList.remove("active");
+            });
+
+            // Si ce n'était pas actif, l'ouvrir avec hauteur dynamique
+            if (!isActive) {
+                content.classList.add("show");
+                content.style.maxHeight = content.scrollHeight + "px";
+                this.classList.add("active");
+            }
         });
     });
+});
 </script>
 {% endblock content %}

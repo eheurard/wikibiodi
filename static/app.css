@@ -15,3 +15,164 @@ body {
     margin: 0;
     padding: 0;
 }
+/* Navbar */
+.navbar {
+    background-color: var(--color1);
+    padding: 15px 0;
+    position: sticky;
+    top: 0;
+    width: 100%;
+    z-index: 1000;
+}
+
+.navbar .container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.navbar-menu {
+    display: flex;
+}
+
+.navbar-nav {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    gap: 20px;
+}
+
+.nav-item {
+    display: inline-block;
+}
+
+.nav-link {
+    text-decoration: none;
+    color: var(--text-color);
+    font-size: 18px;
+    padding: 10px 15px;
+    transition: color 0.3s ease;
+}
+
+.nav-link:hover {
+    color: var(--color3);
+}
+
+/* Buttons */
+button, .btn {
+    background-color: var(--color2);
+    color: var(--text-color);
+    border: none;
+    padding: 10px 15px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    font-size: 16px;
+}
+
+button:hover, .btn:hover {
+    background-color: var(--color1);
+}
+
+/* Containers */
+.container {
+    width: 90%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+/* Headings */
+h1, h2, h3 {
+    color: var(--color1);
+}
+
+/* Forms */
+input, textarea, select {
+    width: 100%;
+    padding: 10px;
+    margin: 5px 0;
+    border: 1px solid var(--color3);
+    border-radius: 5px;
+    font-size: 16px;
+}
+
+input:focus, textarea:focus, select:focus {
+    border-color: var(--color2);
+    outline: none;
+}
+
+/* Cards */
+.card {
+    background-color: var(--color4);
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px;
+}
+
+/* Accordion styles for company details */
+.company-card {
+    margin-bottom: 15px;
+    padding: 15px;
+    border-radius: 10px;
+    background-color: var(--color4);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.company-details {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.5s ease-out, padding 0.3s ease;
+    background-color: var(--color4);
+    padding: 0 10px;
+    border-radius: 5px;
+    margin-top: 5px;
+}
+
+.company-details.show {
+    padding: 10px;
+}
+
+.company-card-header {
+    background-color: var(--color2);
+    color: var(--text-color);
+    border: none;
+    padding: 10px;
+    width: 100%;
+    text-align: left;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    border-radius: 5px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.company-card-header:hover {
+    background-color: var(--color1);
+}
+
+.company-card-header:focus {
+    outline: none;
+}
+
+.company-card-header.active + .company-details {
+    max-height: 500px;
+    padding: 10px;
+}
+
+.detail {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.detail .btn-info {
+    margin-left: auto;
+    padding: 8px 12px;
+    font-size: 14px;
+}
