@@ -9,7 +9,7 @@
 
 /* General styles */
 body {
-    font-family: Arial, sans-serif;
+    font-family: 'Montserrat', sans-serif;
     background-color: #ffffff;
     color: var(--color1);
     margin: 0;
@@ -61,6 +61,7 @@ body {
 
 /* Buttons */
 button, .btn {
+    font-family: 'Montserrat', sans-serif;
     background-color: var(--color2);
     color: var(--text-color);
     border: none;
@@ -86,6 +87,7 @@ button:hover, .btn:hover {
 /* Headings */
 h1, h2, h3 {
     color: var(--color1);
+    font-family: 'Montserrat', sans-serif;
 }
 
 /* Forms */
@@ -117,15 +119,16 @@ input:focus, textarea:focus, select:focus {
     margin-bottom: 15px;
     padding: 15px;
     border-radius: 10px;
-    background-color: var(--color4);
+    background-color: var(--text-color);
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
 .company-details {
+    font-family: 'Montserrat', sans-serif;
     max-height: 0;
     overflow: hidden;
     transition: max-height 0.5s ease-out, padding 0.3s ease;
-    background-color: var(--color4);
+    background-color: var(--text-color);
     padding: 0 10px;
     border-radius: 5px;
     margin-top: 5px;
@@ -136,8 +139,9 @@ input:focus, textarea:focus, select:focus {
 }
 
 .company-card-header {
-    background-color: var(--color2);
-    color: var(--text-color);
+    font-family: 'Montserrat', sans-serif;
+    background-color: var(--text-color);
+    color: var(--color1);
     border: none;
     padding: 10px;
     width: 100%;
@@ -153,6 +157,7 @@ input:focus, textarea:focus, select:focus {
 
 .company-card-header:hover {
     background-color: var(--color1);
+    color: var(--text-color);
 }
 
 .company-card-header:focus {
@@ -176,3 +181,35 @@ input:focus, textarea:focus, select:focus {
     padding: 8px 12px;
     font-size: 14px;
 }
+
+.map-container {
+    margin-top: 20px;
+}
+
+.map {
+    width: 100%;
+    height: 500px; /* Ajuste selon tes besoins */
+    border-radius: 10px;
+}
+
+.table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+.table th, .table td {
+    border: 1px solid var(--color3);
+    padding: 10px;
+    text-align: left;
+}
+
+.table th {
+    background-color: var(--color1);
+    color: var(--text-color);
+}
+
+.table tr:nth-child(even) {
+    background-color: var(--color4);
+}
+

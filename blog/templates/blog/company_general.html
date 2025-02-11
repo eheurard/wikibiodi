@@ -1,6 +1,7 @@
 {% extends 'base.html' %}
 {% load static %}
 
+
 {% block content %}
 <div class="container mt-5">
     <h2>Company Details</h2>
@@ -13,7 +14,72 @@
     {% else %}
         <p>No company selected.</p>
     {% endif %}
+    <form method="post" action="{% url 'delete_company' company.pk %}" style="display: inline;">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-danger mt-3">Delete Company</button>
+    </form>
+
+    <div class="map-container">
+        <h3>Geographical Information</h3>
+        <div id="mapid" class="map"></div> <!-- Conteneur de la carte -->
+    </div>   
+    
+    {% if assets %}
+    <h3>Assets Associated with {{ company.name }}</h3>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Latitude</th>
+                <th>Longitude</th>
+                <th>Asset Type</th>
+                <th>Ownership (%)</th>
+                <th>Description</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for asset in assets %}
+                <tr>
+                    <td>{{ asset.name }}</td>
+                    <td>{{ asset.latitude|default:"N/A" }}</td>
+                    <td>{{ asset.longitude|default:"N/A" }}</td>
+                    <td>{{ asset.asset_type|default:"N/A" }}</td>
+                    <td>{{ asset.ownership_1|default:"N/A" }}</td>
+                    <td>{{ asset.description|default:"No description" }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% else %}
+    <p>No assets associated with this company.</p>
+{% endif %}
+
 
     <a href="{% url 'home' %}" class="btn btn-secondary mt-3">Back to Home</a>
 </div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+    var map = L.map('mapid').setView([0, 0], 2);
+
+    var Esri_WorldImagery = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+        attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
+    });
+
+    var CartoDB_Positron = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+        attribution: '© OpenStreetMap © CARTO',
+        subdomains: 'abcd',
+        maxZoom: 20
+    });
+
+    CartoDB_Positron.addTo(map);
+
+    var baseMaps = {
+        "White map": CartoDB_Positron,
+        "Esri World Imagery": Esri_WorldImagery
+    };
+
+    L.control.layers(baseMaps).addTo(map);
+});
+</script>
 {% endblock content %}
