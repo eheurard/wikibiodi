@@ -58,47 +58,59 @@ def upload_data(request):
         error_messages = []
 
         # Handle Asset Upload
-        if 'asset_file' in request.FILES:  
-            file = request.FILES['asset_file']
-            df = pd.read_excel(file, engine='openpyxl')
-
-            for _, row in df.iterrows():
-                owner_1 = None
-                if pd.notna(row["Owner_1"]):
-                    owner_1 = Company.objects.filter(name__iexact=row["Owner_1"].strip()).first()
-
-                if not owner_1:
-                    error_messages.append(f"Company '{row['Owner_1']}' not found.")
-                    continue
-
-                asset_name = row["Name"].strip() if pd.notna(row["Name"]) else None
-                existing_asset = Asset.objects.filter(name__iexact=asset_name, owner_1=owner_1).exists()
-
-                if existing_asset:
-                    asset_already_exists += 1
-                    error_messages.append(f"Asset '{asset_name}' already exists for company '{owner_1.name}'.")
-                    continue
-
+        if 'asset_upload' in request.POST:  # Check for the button name instead of file
+            if 'asset_file' in request.FILES:
+                file = request.FILES['asset_file']
                 try:
-                    Asset.objects.create(
-                        name=asset_name,
-                        latitude=row["latitude"] if pd.notna(row["latitude"]) else None,
-                        longitude=row["longitude"] if pd.notna(row["longitude"]) else None,
-                        asset_type=row["Asset type"] if pd.notna(row["Asset type"]) else None,
-                        owner_1=owner_1,
-                        ownership_1=row["Ownership"] if pd.notna(row["Ownership"]) else None,
-                        description=row["description"] if pd.notna(row["description"]) else None,
-                        water_score=row["Water_score"] if pd.notna(row["Water_score"]) else 0,
-                        biodiv_score=row["biodiv_score"] if pd.notna(row["biodiv_score"]) else 0,
-                        social_score=row["social_score"] if pd.notna(row["social_score"]) else 0,
-                    )
-                    success_assets += 1
+                    df = pd.read_excel(file, engine='openpyxl')
+
+                    for _, row in df.iterrows():
+                        owner_1 = None
+                        if pd.notna(row.get("Owner_1")):  # Use .get() to safely access dictionary
+                            owner_1 = Company.objects.filter(name__iexact=row["Owner_1"].strip()).first()
+
+                        if not owner_1:
+                            error_messages.append(f"Company '{row.get('Owner_1')}' not found.")
+                            other_errors += 1
+                            continue
+
+                        asset_name = row.get("Name", "").strip() if pd.notna(row.get("Name")) else None
+                        if not asset_name:
+                            error_messages.append("Asset name is required.")
+                            other_errors += 1
+                            continue
+
+                        existing_asset = Asset.objects.filter(name__iexact=asset_name, owner_1=owner_1).exists()
+                        
+                        if existing_asset:
+                            asset_already_exists += 1
+                            error_messages.append(f"Asset '{asset_name}' already exists for company '{owner_1.name}'.")
+                            continue
+
+                        try:
+                            Asset.objects.create(
+                                name=asset_name,
+                                latitude=row.get("latitude") if pd.notna(row.get("latitude")) else None,
+                                longitude=row.get("longitude") if pd.notna(row.get("longitude")) else None,
+                                asset_type=row.get("Asset type") if pd.notna(row.get("Asset type")) else None,
+                                owner_1=owner_1,
+                                ownership_1=row.get("Ownership") if pd.notna(row.get("Ownership")) else None,
+                                description=row.get("description") if pd.notna(row.get("description")) else None,
+                                water_score=row.get("Water_score") if pd.notna(row.get("Water_score")) else 0,
+                                biodiv_score=row.get("biodiv_score") if pd.notna(row.get("biodiv_score")) else 0,
+                                social_score=row.get("social_score") if pd.notna(row.get("social_score")) else 0,
+                            )
+                            success_assets += 1
+                        except Exception as e:
+                            other_errors += 1
+                            error_messages.append(f"Error creating asset '{asset_name}': {str(e)}")
                 except Exception as e:
-                    other_errors += 1
-                    error_messages.append(f"Error creating asset '{asset_name}': {str(e)}")
+                    messages.error(request, f"Error processing file: {str(e)}")
+            else:
+                messages.error(request, "Please select a file to upload.")
 
         # Handle Company Upload
-        if 'company_file' in request.FILES:
+        elif 'company_upload' in request.POST:
             file = request.FILES['company_file']
             df = pd.read_excel(file, engine='openpyxl')
 
@@ -137,6 +149,8 @@ def upload_data(request):
             messages.warning(request, f"{asset_already_exists} assets already exist and were skipped.")
         if other_errors > 0:
             messages.error(request, f"{other_errors} errors encountered.")
+            for msg in error_messages:
+                messages.error(request, msg)
 
         return redirect("upload_data")
 
@@ -144,7 +158,10 @@ def upload_data(request):
         asset_form = AssetUploadForm()
         company_form = CompanyUploadForm()
 
-    return render(request, "blog/upload_data.html", {"asset_form": asset_form, "company_form": company_form})
+    return render(request, "blog/upload_data.html", {
+        "asset_form": asset_form, 
+        "company_form": company_form
+    })
 
 def delete_company(request, company_id):
     company = get_object_or_404(Company, pk=company_id)

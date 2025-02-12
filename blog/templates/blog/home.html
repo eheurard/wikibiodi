@@ -16,28 +16,31 @@
         <input type="text" id="searchInput" class="search-input" placeholder="Search for companies" value="{{ query }}">
     </form>
     
-    <div class="scrollable-container" id="companyAccordion">
-        {% for company in companies %}
-            <div class="company-card">
-                <button class="company-card-header" type="button" data-target="#collapse{{ company.pk }}">
-                    <h5 class="company-name">
-                        {{ company.name }}
-                    </h5>
-                    <span class="badge">{{ company.company_biodiv.biodiversity_score }}</span>
-                </button>
+    <div class="scrollable-container">
+        <div id="companyAccordion">
+            {% for company in companies %}
+                <div class="company-card">
+                    <button class="company-card-header" type="button" data-target="#collapse{{ company.pk }}">
+                        <h5 class="company-name">
+                            {{ company.name }}
+                        </h5>
+                        <span class="badge">{{ company.company_biodiv.biodiversity_score }}</span>
+                    </button>
     
-                <div id="collapse{{ company.pk }}" class="company-details">
-                    <div class="details-row">
-                        <div class="detail">
-                            <strong>Sector:</strong> {{ company.sector }}<br>
-                            <strong>Last Update:</strong> {{ company.last_update|date:"Y-m" }}
-                            <a href="{% url 'company_general' company.pk %}" class="btn btn-info">View Details</a>
+                    <div id="collapse{{ company.pk }}" class="company-details">
+                        <div class="details-row">
+                            <div class="detail">
+                                <strong>Sector:</strong> {{ company.sector }}<br>
+                                <strong>Last Update:</strong> {{ company.last_update|date:"Y-m" }}
+                                <a href="{% url 'company_general' company.pk %}" class="btn btn-info">View Details</a>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
-        {% endfor %}
+            {% endfor %}
+        </div>
     </div>
+    
     
     <div class="add-company">
         <a class="add-company-button" href="{% url 'add_company' %}">Add Company</a>

@@ -278,3 +278,40 @@ input:focus, textarea:focus, select:focus {
     cursor: pointer;
 }
 
+/* Make the company list scrollable */
+.scrollable-container {
+    max-height: 500px; /* Adjust height to your needs */
+    overflow-y: auto;  /* Enables vertical scrolling */
+    border: 1px solid #ddd;
+    padding: 10px;
+    border-radius: 5px;
+    background-color: #f9f9f9;
+}
+
+/* Styling for better visibility */
+.company-card {
+    background: white;
+    padding: 10px;
+    margin-bottom: 8px;
+    border-radius: 5px;
+    box-shadow: 1px 1px 5px rgba(0, 0, 0, 0.1);
+}
+
+/* Hide scrollbar for modern browsers */
+.scrollable-container::-webkit-scrollbar {
+    width: 8px;
+}
+
+.scrollable-container::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+}
+
+.scrollable-container::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 10px;
+}
+
+.scrollable-container::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
