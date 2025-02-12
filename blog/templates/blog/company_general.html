@@ -14,7 +14,7 @@
     {% else %}
         <p>No company selected.</p>
     {% endif %}
-    <form method="post" action="{% url 'delete_company' company.pk %}" style="display: inline;">
+    <form method="post" action="{% url 'delete_company' company.pk %}" style="display: inline;" onsubmit="return confirm('Are you sure you want to delete this company? This action cannot be undone.');">
         {% csrf_token %}
         <button type="submit" class="btn btn-danger mt-3">Delete Company</button>
     </form>
@@ -26,26 +26,37 @@
     
     {% if assets %}
     <h3>Assets Associated with {{ company.name }}</h3>
-    <table class="table">
+    <!-- Search and Sorting Controls -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <input type="text" id="searchInput" class="form-control w-25" placeholder="Search asset by name">
+        
+        <div>
+            <button id="sortByName" class="btn btn-primary">Sort by Name 🔼</button>
+            <button id="sortByOwnership" class="btn btn-primary">Sort by Ownership 🔼</button>
+        </div>
+    </div>
+    
+
+    <table class="table" id="assetTable">
         <thead>
             <tr>
                 <th>Name</th>
-                <th>Latitude</th>
-                <th>Longitude</th>
                 <th>Asset Type</th>
                 <th>Ownership (%)</th>
                 <th>Description</th>
+                <th>Action</th>
             </tr>
         </thead>
         <tbody>
             {% for asset in assets %}
-                <tr>
-                    <td>{{ asset.name }}</td>
-                    <td>{{ asset.latitude|default:"N/A" }}</td>
-                    <td>{{ asset.longitude|default:"N/A" }}</td>
+                <tr data-lat="{{ asset.latitude }}" data-lng="{{ asset.longitude }}">
+                    <td class="asset-name">{{ asset.name }}</td>
                     <td>{{ asset.asset_type|default:"N/A" }}</td>
-                    <td>{{ asset.ownership_1|default:"N/A" }}</td>
+                    <td class="asset-ownership">{{ asset.ownership_1|default:"N/A" }}</td>
                     <td>{{ asset.description|default:"No description" }}</td>
+                    <td>
+                        <button class="btn btn-info zoom-button">Zoom</button>
+                    </td>
                 </tr>
             {% endfor %}
         </tbody>
@@ -60,26 +71,119 @@
 
 <script>
     document.addEventListener("DOMContentLoaded", function () {
-    var map = L.map('mapid').setView([0, 0], 2);
+        var map = L.map('mapid').setView([0, 0], 2);
+        
+        var Esri_WorldImagery = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+            attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
+        });
 
-    var Esri_WorldImagery = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-        attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
+        var CartoDB_Positron = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+            attribution: '© OpenStreetMap © CARTO',
+            subdomains: 'abcd',
+            maxZoom: 20
+        });
+
+        CartoDB_Positron.addTo(map);
+
+        var baseMaps = {
+            "White map": CartoDB_Positron,
+            "Esri World Imagery": Esri_WorldImagery
+        };
+
+        L.control.layers(baseMaps).addTo(map);
+
+        // Define icons
+        var icons = {
+            'Mine': L.icon({ iconUrl: '{% static "icons/Mine.png" %}', iconSize: [32, 32] }),
+            'Factory': L.icon({ iconUrl: '{% static "icons/factory.png" %}', iconSize: [32, 32] }),
+            'Smelter': L.icon({ iconUrl: '{% static "icons/Smelter.png" %}', iconSize: [32, 32] }),
+            'Refinery': L.icon({ iconUrl: '{% static "icons/Refinery.png" %}', iconSize: [32, 32] }),
+            'Renewable': L.icon({ iconUrl: '{% static "icons/Renewable.png" %}', iconSize: [32, 32] }),
+            'Energy': L.icon({ iconUrl: '{% static "icons/Oil.png" %}', iconSize: [32, 32] }),
+            'Building': L.icon({ iconUrl: '{% static "icons/building.png" %}', iconSize: [32, 32] }),
+            'Paper': L.icon({ iconUrl: '{% static "icons/Paper.png" %}', iconSize: [32, 32] }),
+            'Office': L.icon({ iconUrl: '{% static "icons/building.png" %}', iconSize: [32, 32] }),
+            'Oil field': L.icon({ iconUrl: '{% static "icons/Oil.png" %}', iconSize: [32, 32] }),
+            'Airport': L.icon({ iconUrl: '{% static "icons/Airport.png" %}', iconSize: [32, 32] }),
+        };
+
+        // Add markers to the map
+        var markers = {};
+        document.querySelectorAll("#assetTable tbody tr").forEach(row => {
+            var lat = row.dataset.lat;
+            var lng = row.dataset.lng;
+            var name = row.querySelector(".asset-name").textContent;
+            var type = row.querySelector("td:nth-child(2)").textContent.trim();
+            var icon = icons[type] || L.icon({ iconUrl: '{% static "icons/default.png" %}', iconSize: [32, 32] });
+
+            if (lat && lng) {
+                var marker = L.marker([lat, lng], { icon: icon }).addTo(map);
+                marker.bindPopup(`<b>${name}</b><br>Type: ${type}`);
+                markers[name] = marker;
+            }
+        });
+
+        // Attach zoom functionality to buttons
+        document.querySelectorAll(".zoom-button").forEach(button => {
+            button.addEventListener("click", function () {
+                var row = this.closest("tr");
+                var lat = row.dataset.lat;
+                var lng = row.dataset.lng;
+                if (lat && lng) {
+                    map.setView([lat, lng], 12);
+                }
+            });
+        });
+
+        // Sorting state
+        let nameSortAscending = true;
+        let ownershipSortAscending = true;
+
+        document.getElementById("sortByName").addEventListener("click", function () {
+            sortTable(0, false, nameSortAscending);
+            nameSortAscending = !nameSortAscending;  // Toggle sort order
+            this.innerHTML = nameSortAscending ? "Sort by Name 🔼" : "Sort by Name 🔽";
+        });
+
+        document.getElementById("sortByOwnership").addEventListener("click", function () {
+            sortTable(2, true, ownershipSortAscending);
+            ownershipSortAscending = !ownershipSortAscending;  // Toggle sort order
+            this.innerHTML = ownershipSortAscending ? "Sort by Ownership 🔼" : "Sort by Ownership 🔽";
+        });
+
+        function sortTable(columnIndex, isNumeric = false, ascending = true) {
+            let table = document.getElementById("assetTable").getElementsByTagName("tbody")[0];
+            let rows = Array.from(table.getElementsByTagName("tr"));
+
+            rows.sort((a, b) => {
+                let valA = a.cells[columnIndex].textContent.trim();
+                let valB = b.cells[columnIndex].textContent.trim();
+
+                if (isNumeric) {
+                    valA = parseFloat(valA) || 0;
+                    valB = parseFloat(valB) || 0;
+                } else {
+                    valA = valA.toLowerCase();
+                    valB = valB.toLowerCase();
+                }
+
+                return ascending ? (valA > valB ? 1 : -1) : (valA < valB ? 1 : -1);
+            });
+
+            rows.forEach(row => table.appendChild(row)); // Reorder rows in table
+        }
+
+        // Search functionality
+        document.getElementById("searchInput").addEventListener("input", function () {
+            let filter = this.value.toLowerCase();
+            document.querySelectorAll("#assetTable tbody tr").forEach(row => {
+                let name = row.querySelector(".asset-name").textContent.toLowerCase();
+                row.style.display = name.includes(filter) ? "" : "none";
+            });
+        });
     });
-
-    var CartoDB_Positron = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-        attribution: '© OpenStreetMap © CARTO',
-        subdomains: 'abcd',
-        maxZoom: 20
-    });
-
-    CartoDB_Positron.addTo(map);
-
-    var baseMaps = {
-        "White map": CartoDB_Positron,
-        "Esri World Imagery": Esri_WorldImagery
-    };
-
-    L.control.layers(baseMaps).addTo(map);
-});
 </script>
+
+
+
 {% endblock content %}

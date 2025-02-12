@@ -5,6 +5,7 @@
     --color3: #B7B597;
     --color4: #DAD3BE;
     --text-color: #ffffff;
+    --danger-color: #d9534f; /* Red color for delete buttons */
 }
 
 /* General styles */
@@ -76,6 +77,21 @@ button:hover, .btn:hover {
     background-color: var(--color1);
 }
 
+/* Delete Button */
+.btn-danger {
+    background-color: var(--danger-color);
+    color: var(--text-color);
+    border: none;
+    padding: 10px 15px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    font-size: 16px;
+}
+
+.btn-danger:hover {
+    background-color: #c9302c;
+}
 /* Containers */
 .container {
     width: 90%;
