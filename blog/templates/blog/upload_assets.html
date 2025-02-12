@@ -10,4 +10,18 @@
         <button type="submit" class="btn btn-primary">Upload</button>
     </form>
 </div>
+{% if messages %}
+<div id="message-container">
+    {% for message in messages %}
+        <div class="custom-alert {{ message.tags }}">
+            <span class="message-text">{{ message }}</span>
+            <button class="close-alert" onclick="this.parentElement.style.display='none'">✖</button>
+        </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+
+
+
 {% endblock content %}

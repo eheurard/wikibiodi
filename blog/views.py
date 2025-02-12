@@ -1,6 +1,7 @@
 import pandas as pd
 from django.shortcuts import render, redirect, get_object_or_404
 from django.db.models import Q
+from django.contrib import messages
 from blog.models import Company, Asset
 from .forms import CompanyForm, AssetUploadForm
 
@@ -48,68 +49,71 @@ def upload_assets(request):
         form = AssetUploadForm(request.POST, request.FILES)
         if form.is_valid():
             file = request.FILES["file"]
-            
-            # Read the file with Pandas
             df = pd.read_excel(file, engine='openpyxl')
-            
-            # Keep track of success and error messages
+
             success_count = 0
+            company_not_found = 0
+            asset_already_exists = 0
+            other_errors = 0
             error_messages = []
-            
+
             for _, row in df.iterrows():
-                # Check if the company exists
                 owner_1 = None
                 if pd.notna(row["Owner_1"]):
                     owner_1 = Company.objects.filter(name__iexact=row["Owner_1"].strip()).first()
-                
-                # Only create the asset if the company exists
-                if owner_1:
-                    # Check if an asset with the same name already exists for this company
-                    asset_name = row["Name"].strip() if pd.notna(row["Name"]) else None
-                    existing_asset = Asset.objects.filter(
-                        name__iexact=asset_name,
-                        owner_1=owner_1
-                    ).exists()
-                    
-                    if existing_asset:
-                        error_messages.append(
-                            f"Asset '{asset_name}' already exists for company '{owner_1.name}'"
-                        )
-                        continue
-                    
-                    # Create the asset if it doesn't exist
-                    try:
-                        Asset.objects.create(
-                            name=asset_name,
-                            latitude=row["latitude"] if pd.notna(row["latitude"]) else None,
-                            longitude=row["longitude"] if pd.notna(row["longitude"]) else None,
-                            asset_type=row["Asset type"] if pd.notna(row["Asset type"]) else None,
-                            owner_1=owner_1,
-                            ownership_1=row["Ownership"] if pd.notna(row["Ownership"]) else None,
-                            description=row["description"] if pd.notna(row["description"]) else None,
-                            water_score=row["Water_score"] if pd.notna(row["Water_score"]) else 0,
-                            biodiv_score=row["biodiv_score"] if pd.notna(row["biodiv_score"]) else 0,
-                            social_score=row["social_score"] if pd.notna(row["social_score"]) else 0,
-                        )
-                        success_count += 1
-                    except Exception as e:
-                        error_messages.append(
-                            f"Error creating asset '{asset_name}': {str(e)}"
-                        )
-            
-            # Prepare the response message
-            message = f"Successfully uploaded {success_count} assets. "
-            if error_messages:
-                message += f"\nErrors encountered: \n" + "\n".join(error_messages)
-            
-            return render(request, "blog/upload_assets.html", {
-                "form": form,
-                "message": message
-            })
-    
+
+                if not owner_1:
+                    company_not_found += 1
+                    error_messages.append(f"Company '{row['Owner_1']}' not found.")
+                    continue
+
+                asset_name = row["Name"].strip() if pd.notna(row["Name"]) else None
+                existing_asset = Asset.objects.filter(name__iexact=asset_name, owner_1=owner_1).exists()
+
+                if existing_asset:
+                    asset_already_exists += 1
+                    error_messages.append(f"Asset '{asset_name}' already exists for company '{owner_1.name}'.")
+                    continue
+
+                try:
+                    Asset.objects.create(
+                        name=asset_name,
+                        latitude=row["latitude"] if pd.notna(row["latitude"]) else None,
+                        longitude=row["longitude"] if pd.notna(row["longitude"]) else None,
+                        asset_type=row["Asset type"] if pd.notna(row["Asset type"]) else None,
+                        owner_1=owner_1,
+                        ownership_1=row["Ownership"] if pd.notna(row["Ownership"]) else None,
+                        description=row["description"] if pd.notna(row["description"]) else None,
+                        water_score=row["Water_score"] if pd.notna(row["Water_score"]) else 0,
+                        biodiv_score=row["biodiv_score"] if pd.notna(row["biodiv_score"]) else 0,
+                        social_score=row["social_score"] if pd.notna(row["social_score"]) else 0,
+                    )
+                    success_count += 1
+                except Exception as e:
+                    other_errors += 1
+                    error_messages.append(f"Error creating asset '{asset_name}': {str(e)}")
+
+            # Display success and errors with Django messages
+            if success_count > 0:
+                messages.success(request, f"Successfully uploaded {success_count} assets.")
+
+            if company_not_found > 0:
+                messages.warning(request, f"{company_not_found} assets couldn't be added because the company does not exist.")
+
+            if asset_already_exists > 0:
+                messages.warning(request, f"{asset_already_exists} assets already exist and were skipped.")
+
+            if other_errors > 0:
+                messages.error(request, f"{other_errors} assets encountered errors. See details below.")
+
+            for error in error_messages[:5]:  # Show up to 5 errors in messages
+                messages.error(request, error)
+
+            return redirect("upload_assets")
+
     else:
         form = AssetUploadForm()
-    
+
     return render(request, "blog/upload_assets.html", {"form": form})
 
 def delete_company(request, company_id):
