@@ -3,7 +3,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.db.models import Q
 from django.contrib import messages
 from blog.models import Company, Asset
-from .forms import CompanyForm, AssetUploadForm
+from .forms import CompanyForm, AssetUploadForm, CompanyUploadForm
 
 # Create your views here.
 def home (request):
@@ -44,18 +44,23 @@ def company_general(request, company_id):
     return render(request, 'blog/company_general.html', {'company': company, 'assets': assets})
 
 
-def upload_assets(request):
+def upload_data(request):
     if request.method == "POST":
-        form = AssetUploadForm(request.POST, request.FILES)
-        if form.is_valid():
-            file = request.FILES["file"]
-            df = pd.read_excel(file, engine='openpyxl')
+        asset_form = AssetUploadForm(request.POST, request.FILES)
+        company_form = CompanyUploadForm(request.POST, request.FILES)
 
-            success_count = 0
-            company_not_found = 0
-            asset_already_exists = 0
-            other_errors = 0
-            error_messages = []
+        # Track success & error counts
+        success_assets = 0
+        success_companies = 0
+        company_already_exists = 0
+        asset_already_exists = 0
+        other_errors = 0
+        error_messages = []
+
+        # Handle Asset Upload
+        if 'asset_file' in request.FILES:  
+            file = request.FILES['asset_file']
+            df = pd.read_excel(file, engine='openpyxl')
 
             for _, row in df.iterrows():
                 owner_1 = None
@@ -63,7 +68,6 @@ def upload_assets(request):
                     owner_1 = Company.objects.filter(name__iexact=row["Owner_1"].strip()).first()
 
                 if not owner_1:
-                    company_not_found += 1
                     error_messages.append(f"Company '{row['Owner_1']}' not found.")
                     continue
 
@@ -88,33 +92,59 @@ def upload_assets(request):
                         biodiv_score=row["biodiv_score"] if pd.notna(row["biodiv_score"]) else 0,
                         social_score=row["social_score"] if pd.notna(row["social_score"]) else 0,
                     )
-                    success_count += 1
+                    success_assets += 1
                 except Exception as e:
                     other_errors += 1
                     error_messages.append(f"Error creating asset '{asset_name}': {str(e)}")
 
-            # Display success and errors with Django messages
-            if success_count > 0:
-                messages.success(request, f"Successfully uploaded {success_count} assets.")
+        # Handle Company Upload
+        if 'company_file' in request.FILES:
+            file = request.FILES['company_file']
+            df = pd.read_excel(file, engine='openpyxl')
 
-            if company_not_found > 0:
-                messages.warning(request, f"{company_not_found} assets couldn't be added because the company does not exist.")
+            for _, row in df.iterrows():
+                name = row["Nom de l'entreprise"].strip() if pd.notna(row["Nom de l'entreprise"]) else None
+                isin = row["Numéro ISIN"].strip() if pd.notna(row["Numéro ISIN"]) else None
+                ticker = row["Ticker"].strip() if pd.notna(row["Ticker"]) else None
+                sector = row["Secteur"].strip() if pd.notna(row["Secteur"]) else None
 
-            if asset_already_exists > 0:
-                messages.warning(request, f"{asset_already_exists} assets already exist and were skipped.")
+                # Check if company already exists (either by name or ISIN)
+                if Company.objects.filter(name__iexact=name).exists() or Company.objects.filter(ISIN_number__iexact=isin).exists():
+                    company_already_exists += 1
+                    error_messages.append(f"Company '{name}' or ISIN '{isin}' already exists.")
+                    continue
 
-            if other_errors > 0:
-                messages.error(request, f"{other_errors} assets encountered errors. See details below.")
+                try:
+                    Company.objects.create(
+                        name=name,
+                        ISIN_number=isin,
+                        Ticker=ticker,
+                        sector=sector
+                    )
+                    success_companies += 1
+                except Exception as e:
+                    other_errors += 1
+                    error_messages.append(f"Error creating company '{name}': {str(e)}")
 
-            for error in error_messages[:5]:  # Show up to 5 errors in messages
-                messages.error(request, error)
+        # Add messages to Django messages framework
+        if success_assets > 0:
+            messages.success(request, f"Successfully uploaded {success_assets} assets.")
+        if success_companies > 0:
+            messages.success(request, f"Successfully uploaded {success_companies} companies.")
+        if company_already_exists > 0:
+            messages.warning(request, f"{company_already_exists} companies were skipped because they already exist.")
+        if asset_already_exists > 0:
+            messages.warning(request, f"{asset_already_exists} assets already exist and were skipped.")
+        if other_errors > 0:
+            messages.error(request, f"{other_errors} errors encountered.")
 
-            return redirect("upload_assets")
+        return redirect("upload_data")
 
     else:
-        form = AssetUploadForm()
+        asset_form = AssetUploadForm()
+        company_form = CompanyUploadForm()
 
-    return render(request, "blog/upload_assets.html", {"form": form})
+    return render(request, "blog/upload_data.html", {"asset_form": asset_form, "company_form": company_form})
 
 def delete_company(request, company_id):
     company = get_object_or_404(Company, pk=company_id)

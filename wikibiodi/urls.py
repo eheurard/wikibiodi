@@ -27,7 +27,7 @@ urlpatterns = [
     path('home/', blog.views.home, name='home'),
     path('add/', blog.views.add_company, name='add_company'),
     path('company/<int:company_id>/', blog.views.company_general, name='company_general'),
-    path('upload-assets/', blog.views.upload_assets, name="upload_assets"),
+    path('upload-assets/', blog.views.upload_data, name="upload_data"),
      path("company/<int:company_id>/delete/", blog.views.delete_company, name="delete_company"),
     
 ]

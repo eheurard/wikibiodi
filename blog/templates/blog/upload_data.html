@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+
+{% if messages %}
+<div id="message-container">
+    {% for message in messages %}
+        <div class="custom-alert {{ message.tags }}">
+            <span class="message-text">{{ message }}</span>
+            <button class="close-alert" onclick="this.parentElement.style.display='none'">✖</button>
+        </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<div class="container">
+    <h2>Upload Data</h2>
+
+    <!-- Upload Assets -->
+    <h3>Upload Asset List</h3>
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        {{ asset_form.as_p }}
+        <button type="submit" class="btn btn-primary" name="asset_upload">Upload Assets</button>
+    </form>
+
+    <hr>
+
+    <!-- Upload Companies -->
+    <h3>Upload Company List</h3>
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        {{ company_form.as_p }}
+        <button type="submit" class="btn btn-primary" name="company_upload">Upload Companies</button>
+    </form>
+</div>
+
+
+
+
+
+{% endblock content %}

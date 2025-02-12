@@ -8,3 +8,7 @@ class CompanyForm(forms.ModelForm):
 
 class AssetUploadForm(forms.Form):
     file = forms.FileField(label="Upload an Excel file")
+
+class CompanyUploadForm(forms.Form):
+    company_file = forms.FileField(label="Upload Company Excel File")
+
