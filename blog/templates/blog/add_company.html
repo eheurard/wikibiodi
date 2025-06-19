@@ -1,13 +1,447 @@
 {% extends 'base.html' %}
 {% load static %}
 
+{% block title %}Add Company - Wikibiodi{% endblock %}
+
+{% block breadcrumb %}
+<a href="{% url 'home' %}" style="color: var(--primary-600); text-decoration: none;">Dashboard</a>
+<i data-lucide="chevron-right" width="16" height="16"></i>
+<span>Add Company</span>
+{% endblock %}
+
 {% block content %}
-<div class="container mt-5">
-    <h2>Add a New Company</h2>
-    <form method="post">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit" class="btn btn-primary">Submit</button>
-    </form>
+<!-- Page Header -->
+<div class="page-header">
+    <h1 class="page-title">Add New Company</h1>
+    <p class="page-subtitle">Register a new company to start tracking its biodiversity footprint</p>
 </div>
-{% endblock content %}
+
+<div class="form-container" style="max-width: 800px; margin: 0 auto;">
+    <div class="card">
+        <div class="card-header">
+            <div class="flex items-center gap-3">
+                <div class="form-icon bg-accent-100">
+                    <i data-lucide="building-2" width="24" height="24" style="color: var(--accent-600);"></i>
+                </div>
+                <div>
+                    <h2 class="card-title">Company Information</h2>
+                    <p class="text-sm" style="color: var(--primary-600);">Fill in the basic information about the company</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card-content">
+            <form method="post" class="modern-form" id="companyForm">
+                {% csrf_token %}
+                
+                <!-- Company Name -->
+                <div class="form-group">
+                    <label for="{{ form.name.id_for_label }}" class="form-label">
+                        <i data-lucide="building" width="16" height="16"></i>
+                        Company Name *
+                    </label>
+                    <input 
+                        type="text" 
+                        id="{{ form.name.id_for_label }}" 
+                        name="{{ form.name.name }}"
+                        class="form-input"
+                        placeholder="Enter the full company name"
+                        value="{{ form.name.value|default:'' }}"
+                        required
+                    >
+                    {% if form.name.errors %}
+                        <div class="field-errors">
+                            {% for error in form.name.errors %}
+                                <span class="error-message">{{ error }}</span>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- ISIN Number -->
+                <div class="form-group">
+                    <label for="{{ form.ISIN_number.id_for_label }}" class="form-label">
+                        <i data-lucide="hash" width="16" height="16"></i>
+                        ISIN Number
+                    </label>
+                    <input 
+                        type="text" 
+                        id="{{ form.ISIN_number.id_for_label }}" 
+                        name="{{ form.ISIN_number.name }}"
+                        class="form-input"
+                        placeholder="e.g., US0378331005 (Optional)"
+                        value="{{ form.ISIN_number.value|default:'' }}"
+                        pattern="[A-Z]{2}[A-Z0-9]{10}"
+                        title="ISIN should be 12 characters: 2 letters followed by 10 alphanumeric characters"
+                    >
+                    <div class="field-help">
+                        <i data-lucide="info" width="14" height="14"></i>
+                        International Securities Identification Number (12 characters)
+                    </div>
+                    {% if form.ISIN_number.errors %}
+                        <div class="field-errors">
+                            {% for error in form.ISIN_number.errors %}
+                                <span class="error-message">{{ error }}</span>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Ticker Symbol -->
+                <div class="form-group">
+                    <label for="{{ form.Ticker.id_for_label }}" class="form-label">
+                        <i data-lucide="trending-up" width="16" height="16"></i>
+                        Ticker Symbol
+                    </label>
+                    <input 
+                        type="text" 
+                        id="{{ form.Ticker.id_for_label }}" 
+                        name="{{ form.Ticker.name }}"
+                        class="form-input"
+                        placeholder="e.g., AAPL, MSFT (Optional)"
+                        value="{{ form.Ticker.value|default:'' }}"
+                        style="text-transform: uppercase;"
+                    >
+                    <div class="field-help">
+                        <i data-lucide="info" width="14" height="14"></i>
+                        Stock exchange ticker symbol (usually 1-5 characters)
+                    </div>
+                    {% if form.Ticker.errors %}
+                        <div class="field-errors">
+                            {% for error in form.Ticker.errors %}
+                                <span class="error-message">{{ error }}</span>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Sector -->
+                <div class="form-group">
+                    <label for="{{ form.sector.id_for_label }}" class="form-label">
+                        <i data-lucide="layers" width="16" height="16"></i>
+                        Business Sector *
+                    </label>
+                    <select 
+                        id="{{ form.sector.id_for_label }}" 
+                        name="{{ form.sector.name }}"
+                        class="form-input"
+                        required
+                    >
+                        <option value="">Select a business sector</option>
+                        <option value="Technology" {% if form.sector.value == "Technology" %}selected{% endif %}>Technology</option>
+                        <option value="Healthcare" {% if form.sector.value == "Healthcare" %}selected{% endif %}>Healthcare & Pharmaceuticals</option>
+                        <option value="Financial Services" {% if form.sector.value == "Financial Services" %}selected{% endif %}>Financial Services</option>
+                        <option value="Energy" {% if form.sector.value == "Energy" %}selected{% endif %}>Energy & Utilities</option>
+                        <option value="Manufacturing" {% if form.sector.value == "Manufacturing" %}selected{% endif %}>Manufacturing</option>
+                        <option value="Consumer Goods" {% if form.sector.value == "Consumer Goods" %}selected{% endif %}>Consumer Goods</option>
+                        <option value="Retail" {% if form.sector.value == "Retail" %}selected{% endif %}>Retail & E-commerce</option>
+                        <option value="Transportation" {% if form.sector.value == "Transportation" %}selected{% endif %}>Transportation & Logistics</option>
+                        <option value="Real Estate" {% if form.sector.value == "Real Estate" %}selected{% endif %}>Real Estate</option>
+                        <option value="Agriculture" {% if form.sector.value == "Agriculture" %}selected{% endif %}>Agriculture & Food</option>
+                        <option value="Mining" {% if form.sector.value == "Mining" %}selected{% endif %}>Mining & Resources</option>
+                        <option value="Telecommunications" {% if form.sector.value == "Telecommunications" %}selected{% endif %}>Telecommunications</option>
+                        <option value="Media" {% if form.sector.value == "Media" %}selected{% endif %}>Media & Entertainment</option>
+                        <option value="Education" {% if form.sector.value == "Education" %}selected{% endif %}>Education</option>
+                        <option value="Government" {% if form.sector.value == "Government" %}selected{% endif %}>Government & Public Sector</option>
+                        <option value="Non-Profit" {% if form.sector.value == "Non-Profit" %}selected{% endif %}>Non-Profit</option>
+                        <option value="Other" {% if form.sector.value == "Other" %}selected{% endif %}>Other</option>
+                    </select>
+                    {% if form.sector.errors %}
+                        <div class="field-errors">
+                            {% for error in form.sector.errors %}
+                                <span class="error-message">{{ error }}</span>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Form Actions -->
+                <div class="form-actions">
+                    <a href="{% url 'home' %}" class="btn btn-secondary">
+                        <i data-lucide="x" width="16" height="16"></i>
+                        Cancel
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i data-lucide="plus-circle" width="16" height="16"></i>
+                        Add Company
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Help Section -->
+    <div class="card mt-8">
+        <div class="card-header">
+            <h3 class="card-title">
+                <i data-lucide="help-circle" width="20" height="20" style="margin-right: var(--space-2);"></i>
+                Need Help?
+            </h3>
+        </div>
+        <div class="card-content">
+            <div class="help-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: var(--space-6);">
+                
+                <div class="help-item">
+                    <div class="help-icon bg-accent-100">
+                        <i data-lucide="file-text" width="20" height="20" style="color: var(--accent-600);"></i>
+                    </div>
+                    <div>
+                        <h4 class="help-title">ISIN Lookup</h4>
+                        <p class="help-text">Not sure about the ISIN? You can find it on financial websites like Bloomberg, Yahoo Finance, or the company's investor relations page.</p>
+                    </div>
+                </div>
+                
+                <div class="help-item">
+                    <div class="help-icon bg-primary-100">
+                        <i data-lucide="search" width="20" height="20" style="color: var(--primary-600);"></i>
+                    </div>
+                    <div>
+                        <h4 class="help-title">Ticker Symbol</h4>
+                        <p class="help-text">The ticker symbol is the company's stock market identifier. For example, Apple Inc. uses "AAPL" on NASDAQ.</p>
+                    </div>
+                </div>
+                
+                <div class="help-item">
+                    <div class="help-icon bg-success-100">
+                        <i data-lucide="upload" width="20" height="20" style="color: var(--success-600);"></i>
+                    </div>
+                    <div>
+                        <h4 class="help-title">Bulk Upload</h4>
+                        <p class="help-text">Adding multiple companies? Use our <a href="{% url 'upload_data' %}" class="link">bulk upload feature</a> to import from Excel or CSV files.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.form-container {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.form-icon {
+    padding: var(--space-3);
+    border-radius: var(--radius-lg);
+    flex-shrink: 0;
+}
+
+.modern-form {
+    max-width: none;
+}
+
+.form-group {
+    margin-bottom: var(--space-6);
+}
+
+.form-label {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-weight: 600;
+    color: var(--primary-900);
+    margin-bottom: var(--space-2);
+    font-size: 0.875rem;
+}
+
+.form-input {
+    width: 100%;
+    padding: var(--space-4);
+    border: 1px solid var(--primary-300);
+    border-radius: var(--radius-md);
+    font-size: 1rem;
+    transition: all 0.2s ease;
+    background-color: white;
+}
+
+.form-input:focus {
+    outline: none;
+    border-color: var(--accent-500);
+    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+}
+
+.form-input:invalid {
+    border-color: var(--error-500);
+}
+
+.form-input:invalid:focus {
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+}
+
+.field-help {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    margin-top: var(--space-2);
+    font-size: 0.75rem;
+    color: var(--primary-600);
+}
+
+.field-errors {
+    margin-top: var(--space-2);
+}
+
+.error-message {
+    display: block;
+    color: var(--error-600);
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.form-actions {
+    display: flex;
+    gap: var(--space-4);
+    justify-content: flex-end;
+    padding-top: var(--space-6);
+    border-top: 1px solid var(--primary-200);
+    margin-top: var(--space-8);
+}
+
+.help-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: var(--space-6);
+}
+
+.help-item {
+    display: flex;
+    gap: var(--space-3);
+    align-items: flex-start;
+}
+
+.help-icon {
+    padding: var(--space-2);
+    border-radius: var(--radius-md);
+    flex-shrink: 0;
+}
+
+.help-title {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--primary-900);
+    margin-bottom: var(--space-1);
+}
+
+.help-text {
+    font-size: 0.75rem;
+    color: var(--primary-600);
+    line-height: 1.5;
+    margin: 0;
+}
+
+.link {
+    color: var(--accent-600);
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.link:hover {
+    color: var(--accent-700);
+    text-decoration: underline;
+}
+
+/* Auto-uppercase ticker input */
+input[name="Ticker"] {
+    text-transform: uppercase;
+}
+
+/* Select styling */
+select.form-input {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+    background-position: right var(--space-3) center;
+    background-repeat: no-repeat;
+    background-size: 16px 12px;
+    padding-right: var(--space-10);
+    appearance: none;
+}
+
+select.form-input:focus {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%2310b981' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+}
+</style>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const form = document.getElementById('companyForm');
+    const tickerInput = document.querySelector('input[name="Ticker"]');
+    const isinInput = document.querySelector('input[name="ISIN_number"]');
+    
+    // Auto-uppercase ticker symbol
+    if (tickerInput) {
+        tickerInput.addEventListener('input', function() {
+            this.value = this.value.toUpperCase();
+        });
+    }
+    
+    // ISIN format validation
+    if (isinInput) {
+        isinInput.addEventListener('input', function() {
+            const value = this.value.toUpperCase();
+            this.value = value;
+            
+            // Basic ISIN validation (2 letters + 10 alphanumeric)
+            const isinPattern = /^[A-Z]{2}[A-Z0-9]{10}$/;
+            if (value.length > 0 && value.length < 12) {
+                this.setCustomValidity('ISIN must be exactly 12 characters');
+            } else if (value.length === 12 && !isinPattern.test(value)) {
+                this.setCustomValidity('ISIN format: 2 letters followed by 10 alphanumeric characters');
+            } else {
+                this.setCustomValidity('');
+            }
+        });
+    }
+    
+    // Form validation
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            const requiredFields = form.querySelectorAll('[required]');
+            let isValid = true;
+            
+            requiredFields.forEach(field => {
+                if (!field.value.trim()) {
+                    field.style.borderColor = 'var(--error-500)';
+                    isValid = false;
+                } else {
+                    field.style.borderColor = 'var(--primary-300)';
+                }
+            });
+            
+            if (!isValid) {
+                e.preventDefault();
+                // Show error message
+                const firstInvalidField = form.querySelector('[style*="--error-500"]');
+                if (firstInvalidField) {
+                    firstInvalidField.focus();
+                    firstInvalidField.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            }
+        });
+        
+        // Real-time validation for required fields
+        const requiredInputs = form.querySelectorAll('[required]');
+        requiredInputs.forEach(input => {
+            input.addEventListener('blur', function() {
+                if (!this.value.trim()) {
+                    this.style.borderColor = 'var(--error-500)';
+                } else {
+                    this.style.borderColor = 'var(--primary-300)';
+                }
+            });
+            
+            input.addEventListener('input', function() {
+                if (this.value.trim()) {
+                    this.style.borderColor = 'var(--primary-300)';
+                }
+            });
+        });
+    }
+    
+    // Initialize Lucide icons
+    lucide.createIcons();
+});
+</script>
+{% endblock extra_js %}

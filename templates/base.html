@@ -1,45 +1,219 @@
 {% load static %}
-
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Wikibiodi - Home</title>
+    <title>{% block title %}Wikibiodi - Biodiversity Dashboard{% endblock %}</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- CSS -->
     <link rel="stylesheet" href="{% static 'css/app.css' %}">
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600&display=swap" rel="stylesheet">
+    
     <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" />
-
-    <!-- Leaflet JS -->
-    <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
+    
+    <!-- Icons (Lucide) -->
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    
+    {% block extra_css %}{% endblock %}
 </head>
 <body>
-    <nav class="navbar">
-        <div class="container">
-            <div class="navbar-menu" id="navbarMenu">
-                <ul class="navbar-nav">
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'home' %}">Home</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'upload_data' %}">Upload</a>
-                    </li>
-                </ul>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <a href="{% url 'home' %}" class="logo">
+                    <i data-lucide="leaf" class="nav-icon"></i>
+                    Wikibiodi
+                </a>
             </div>
-        </div>
-    </nav>
+            
+            <nav class="sidebar-nav">
+                <div class="nav-section">
+                    <div class="nav-section-title">Main</div>
+                    <a href="{% url 'home' %}" class="nav-link {% if request.resolver_match.url_name == 'home' %}active{% endif %}">
+                        <i data-lucide="home" class="nav-icon"></i>
+                        Dashboard
+                    </a>
+                    <a href="#" class="nav-link">
+                        <i data-lucide="building-2" class="nav-icon"></i>
+                        Companies
+                    </a>
+                    <a href="#" class="nav-link">
+                        <i data-lucide="map" class="nav-icon"></i>
+                        Global Map
+                    </a>
+                </div>
+                
+                <div class="nav-section">
+                    <div class="nav-section-title">Data Management</div>
+                    <a href="{% url 'upload_data' %}" class="nav-link {% if request.resolver_match.url_name == 'upload_data' %}active{% endif %}">
+                        <i data-lucide="upload" class="nav-icon"></i>
+                        Upload Data
+                    </a>
+                    <a href="{% url 'add_company' %}" class="nav-link {% if request.resolver_match.url_name == 'add_company' %}active{% endif %}">
+                        <i data-lucide="plus-circle" class="nav-icon"></i>
+                        Add Company
+                    </a>
+                    <a href="#" class="nav-link">
+                        <i data-lucide="download" class="nav-icon"></i>
+                        Export Data
+                    </a>
+                </div>
+                
+                <div class="nav-section">
+                    <div class="nav-section-title">Analytics</div>
+                    <a href="#" class="nav-link">
+                        <i data-lucide="bar-chart-3" class="nav-icon"></i>
+                        Reports
+                    </a>
+                    <a href="#" class="nav-link">
+                        <i data-lucide="trending-up" class="nav-icon"></i>
+                        Trends
+                    </a>
+                    <a href="#" class="nav-link">
+                        <i data-lucide="pie-chart" class="nav-icon"></i>
+                        Insights
+                    </a>
+                </div>
+                
+                {% if user.is_authenticated %}
+                <div class="nav-section">
+                    <div class="nav-section-title">Account</div>
+                    <a href="#" class="nav-link">
+                        <i data-lucide="user" class="nav-icon"></i>
+                        Profile
+                    </a>
+                    <a href="#" class="nav-link">
+                        <i data-lucide="settings" class="nav-icon"></i>
+                        Settings
+                    </a>
+                    <a href="{% url 'logout' %}" class="nav-link">
+                        <i data-lucide="log-out" class="nav-icon"></i>
+                        Logout
+                    </a>
+                </div>
+                {% endif %}
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content" id="mainContent">
+            <!-- Top Navigation -->
+            <header class="top-nav">
+                <div class="nav-left">
+                    <button class="menu-toggle" id="menuToggle">
+                        <i data-lucide="menu" width="20" height="20"></i>
+                    </button>
+                    
+                    <nav class="breadcrumb">
+                        {% block breadcrumb %}
+                        <span>Dashboard</span>
+                        {% endblock %}
+                    </nav>
+                </div>
+                
+                <div class="nav-right">
+                    {% if user.is_authenticated %}
+                        <div class="user-info">
+                            <span class="text-sm">Welcome, {{ user.username }}</span>
+                        </div>
+                    {% endif %}
+                    
+                    <button class="btn btn-secondary btn-sm">
+                        <i data-lucide="bell" width="16" height="16"></i>
+                    </button>
+                </div>
+            </header>
+
+            <!-- Page Content -->
+            <div class="content-wrapper">
+                {% block content %}{% endblock %}
+            </div>
+        </main>
+    </div>
+
+    <!-- Alert Container for Messages -->
+    <div class="alert-container" id="alertContainer">
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }}">
+                    <div class="alert-content">
+                        <strong>
+                            {% if message.tags == 'success' %}
+                                <i data-lucide="check-circle" width="16" height="16"></i>
+                            {% elif message.tags == 'warning' %}
+                                <i data-lucide="alert-triangle" width="16" height="16"></i>
+                            {% elif message.tags == 'error' %}
+                                <i data-lucide="x-circle" width="16" height="16"></i>
+                            {% endif %}
+                        </strong>
+                        {{ message }}
+                    </div>
+                    <button class="alert-close" onclick="this.parentElement.remove()">
+                        <i data-lucide="x" width="16" height="16"></i>
+                    </button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    </div>
+
+    <!-- JavaScript -->
+    <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
     
-    <main>
-        {% block content %}{% endblock content %}
-    </main>
-    {% if user.is_authenticated %}
-            <p>Vous êtes connecté en tant que {{ request.user }}. <a href="{% url 'logout' %}">Se déconnecter</a></p>
-    {% endif %}
+    <script>
+        // Initialize Lucide icons
+        lucide.createIcons();
+        
+        // Sidebar toggle functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const menuToggle = document.getElementById('menuToggle');
+            const sidebar = document.getElementById('sidebar');
+            const mainContent = document.getElementById('mainContent');
+            
+            menuToggle.addEventListener('click', function() {
+                sidebar.classList.toggle('collapsed');
+                mainContent.classList.toggle('expanded');
+            });
+            
+            // Auto-close sidebar on mobile when clicking outside
+            document.addEventListener('click', function(event) {
+                if (window.innerWidth <= 768) {
+                    if (!sidebar.contains(event.target) && !menuToggle.contains(event.target)) {
+                        sidebar.classList.add('collapsed');
+                        mainContent.classList.add('expanded');
+                    }
+                }
+            });
+            
+            // Handle window resize
+            window.addEventListener('resize', function() {
+                if (window.innerWidth <= 768) {
+                    sidebar.classList.add('collapsed');
+                    mainContent.classList.add('expanded');
+                } else {
+                    sidebar.classList.remove('collapsed');
+                    mainContent.classList.remove('expanded');
+                }
+            });
+            
+            // Auto-hide alerts after 5 seconds
+            const alerts = document.querySelectorAll('.alert');
+            alerts.forEach(alert => {
+                setTimeout(() => {
+                    if (alert.parentElement) {
+                        alert.remove();
+                    }
+                }, 5000);
+            });
+        });
+    </script>
     
-    <footer class="footer">
-        <div class="container">
-            <span class="text-muted">&copy; 2024 Wikibiodi. All rights reserved.</span>
-        </div>
-    </footer>
+    {% block extra_js %}{% endblock %}
 </body>
 </html>

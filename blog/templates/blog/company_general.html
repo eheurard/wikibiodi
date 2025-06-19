@@ -1,189 +1,588 @@
 {% extends 'base.html' %}
 {% load static %}
 
+{% block title %}{{ company.name }} - Company Details{% endblock %}
+
+{% block breadcrumb %}
+<a href="{% url 'home' %}" style="color: var(--primary-600); text-decoration: none;">Dashboard</a>
+<i data-lucide="chevron-right" width="16" height="16"></i>
+<span>{{ company.name }}</span>
+{% endblock %}
 
 {% block content %}
-<div class="container mt-5">
-    <h2>Company Details</h2>
-    {% if company %}
-            <h3>{{ company.name }}</h3>
-            <p><strong>ISIN Number:</strong> {{ company.ISIN_number }}</p>
-            <p><strong>Ticker:</strong> {{ company.Ticker }}</p>
-            <p><strong>Sector:</strong> {{ company.sector }}</p>
-            <p><strong>Last Update:</strong> {{ company.last_update|date:"Y-m-d H:i" }}</p>
-    {% else %}
-        <p>No company selected.</p>
-    {% endif %}
-    <form method="post" action="{% url 'delete_company' company.pk %}" style="display: inline;" onsubmit="return confirm('Are you sure you want to delete this company? This action cannot be undone.');">
-        {% csrf_token %}
-        <button type="submit" class="btn btn-danger mt-3">Delete Company</button>
-    </form>
-
-    <div class="map-container">
-        <h3>Geographical Information</h3>
-        <div id="mapid" class="map"></div> <!-- Conteneur de la carte -->
-    </div>   
-    
-    {% if assets %}
-    <h3>Assets Associated with {{ company.name }}</h3>
-    <!-- Search and Sorting Controls -->
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <input type="text" id="searchInput" class="form-control w-25" placeholder="Search asset by name">
-        
+<!-- Page Header -->
+<div class="page-header">
+    <div class="flex justify-between items-start">
         <div>
-            <button id="sortByName" class="btn btn-primary">Sort by Name 🔼</button>
-            <button id="sortByOwnership" class="btn btn-primary">Sort by Ownership 🔼</button>
+            <h1 class="page-title">{{ company.name }}</h1>
+            <p class="page-subtitle">Comprehensive biodiversity and environmental impact analysis</p>
+        </div>
+        <div class="flex gap-4">
+            <a href="{% url 'home' %}" class="btn btn-secondary">
+                <i data-lucide="arrow-left" width="16" height="16"></i>
+                Back to Dashboard
+            </a>
+            <form method="post" action="{% url 'delete_company' company.pk %}" style="display: inline;" onsubmit="return confirm('Are you sure you want to delete this company? This action cannot be undone.');">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-danger">
+                    <i data-lucide="trash-2" width="16" height="16"></i>
+                    Delete Company
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Company Info Cards -->
+<div class="company-info-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: var(--space-6); margin-bottom: var(--space-8);">
+    <!-- Basic Information Card -->
+    <div class="card">
+        <div class="card-header">
+            <h2 class="card-title">
+                <i data-lucide="building-2" width="20" height="20" style="margin-right: var(--space-2);"></i>
+                Company Information
+            </h2>
+        </div>
+        <div class="card-content">
+            <div class="info-item">
+                <label class="info-label">Company Name</label>
+                <p class="info-value">{{ company.name }}</p>
+            </div>
+            
+            {% if company.ISIN_number %}
+            <div class="info-item">
+                <label class="info-label">ISIN Number</label>
+                <p class="info-value">{{ company.ISIN_number }}</p>
+            </div>
+            {% endif %}
+            
+            {% if company.Ticker %}
+            <div class="info-item">
+                <label class="info-label">Ticker Symbol</label>
+                <p class="info-value">{{ company.Ticker }}</p>
+            </div>
+            {% endif %}
+            
+            <div class="info-item">
+                <label class="info-label">Sector</label>
+                <p class="info-value">{{ company.sector }}</p>
+            </div>
+            
+            <div class="info-item">
+                <label class="info-label">Last Update</label>
+                <p class="info-value">{{ company.last_update|date:"F j, Y \a\t g:i A" }}</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Biodiversity Metrics Card -->
+    <div class="card">
+        <div class="card-header">
+            <h2 class="card-title">
+                <i data-lucide="leaf" width="20" height="20" style="margin-right: var(--space-2);"></i>
+                Biodiversity Metrics
+            </h2>
+        </div>
+        <div class="card-content">
+            <div class="metrics-grid">
+                <div class="metric-item">
+                    <div class="metric-icon bg-accent-100">
+                        <i data-lucide="leaf" width="20" height="20" style="color: var(--accent-600);"></i>
+                    </div>
+                    <div>
+                        <label class="metric-label">Biodiversity Score</label>
+                        <p class="metric-value">7.2</p>
+                    </div>
+                </div>
+                
+                <div class="metric-item">
+                    <div class="metric-icon bg-primary-100">
+                        <i data-lucide="droplets" width="20" height="20" style="color: var(--primary-600);"></i>
+                    </div>
+                    <div>
+                        <label class="metric-label">Water Impact</label>
+                        <p class="metric-value">6.8</p>
+                    </div>
+                </div>
+                
+                <div class="metric-item">
+                    <div class="metric-icon bg-warning-100">
+                        <i data-lucide="users" width="20" height="20" style="color: var(--warning-600);"></i>
+                    </div>
+                    <div>
+                        <label class="metric-label">Social Score</label>
+                        <p class="metric-value">8.1</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Assets Summary Card -->
+    <div class="card">
+        <div class="card-header">
+            <h2 class="card-title">
+                <i data-lucide="map-pin" width="20" height="20" style="margin-right: var(--space-2);"></i>
+                Assets Overview
+            </h2>
+        </div>
+        <div class="card-content">
+            <div class="asset-stats">
+                <div class="stat-item">
+                    <span class="stat-number">{{ assets.count }}</span>
+                    <span class="stat-label">Total Assets</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number">
+                        {% with assets|length as total %}
+                            {% if total > 0 %}
+                                {% regroup assets by asset_type as asset_types %}
+                                {{ asset_types|length }}
+                            {% else %}
+                                0
+                            {% endif %}
+                        {% endwith %}
+                    </span>
+                    <span class="stat-label">Asset Types</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number">
+                        {% with geolocated_count=0 %}
+                            {% for asset in assets %}
+                                {% if asset.latitude and asset.longitude %}
+                                    {% with geolocated_count=geolocated_count|add:1 %}{% endwith %}
+                                {% endif %}
+                            {% endfor %}
+                            {% for asset in assets %}
+                                {% if asset.latitude and asset.longitude %}
+                                    {% if forloop.first %}{{ forloop.parentloop.counter0|add:forloop.counter }}{% endif %}
+                                {% endif %}
+                            {% empty %}
+                                0
+                            {% endfor %}
+                        {% endwith %}
+                    </span>
+                    <span class="stat-label">Geolocated</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Map Section -->
+{% if assets %}
+<div class="card mb-8">
+    <div class="card-header">
+        <div class="flex justify-between items-center">
+            <h2 class="card-title">
+                <i data-lucide="map" width="20" height="20" style="margin-right: var(--space-2);"></i>
+                Asset Locations
+            </h2>
+            <div class="map-controls">
+                <button class="btn btn-secondary btn-sm" id="fitBounds">
+                    <i data-lucide="maximize" width="16" height="16"></i>
+                    Fit All
+                </button>
+            </div>
+        </div>
+    </div>
+    <div class="card-content">
+        <div class="map-container">
+            <div id="mapid" class="map"></div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Assets Table -->
+{% if assets %}
+<div class="card">
+    <div class="card-header">
+        <div class="flex justify-between items-center">
+            <h2 class="card-title">
+                <i data-lucide="database" width="20" height="20" style="margin-right: var(--space-2);"></i>
+                Asset Details
+            </h2>
+            <div class="table-controls">
+                <div class="search-container" style="width: 300px; margin: 0;">
+                    <div class="search-icon">
+                        <i data-lucide="search" width="16" height="16"></i>
+                    </div>
+                    <input type="text" id="assetSearchInput" class="search-input" placeholder="Search assets...">
+                </div>
+            </div>
         </div>
     </div>
     
-
-    <table class="table" id="assetTable">
-        <thead>
-            <tr>
-                <th>Name</th>
-                <th>Asset Type</th>
-                <th>Ownership (%)</th>
-                <th>Description</th>
-                <th>Action</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for asset in assets %}
-                <tr data-lat="{{ asset.latitude }}" data-lng="{{ asset.longitude }}">
-                    <td class="asset-name">{{ asset.name }}</td>
-                    <td>{{ asset.asset_type|default:"N/A" }}</td>
-                    <td class="asset-ownership">{{ asset.ownership_1|default:"N/A" }}</td>
-                    <td>{{ asset.description|default:"No description" }}</td>
-                    <td>
-                        <button class="btn btn-info zoom-button">Zoom</button>
-                    </td>
-                </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+    <div class="card-content" style="padding: 0;">
+        <div class="table-actions" style="padding: var(--space-4); border-bottom: 1px solid var(--primary-200); background-color: var(--primary-50);">
+            <div class="flex gap-2">
+                <button id="sortByName" class="btn btn-secondary btn-sm">
+                    <i data-lucide="arrow-up" width="14" height="14"></i>
+                    Name
+                </button>
+                <button id="sortByOwnership" class="btn btn-secondary btn-sm">
+                    <i data-lucide="arrow-up" width="14" height="14"></i>
+                    Ownership
+                </button>
+                <button id="sortByType" class="btn btn-secondary btn-sm">
+                    <i data-lucide="arrow-up" width="14" height="14"></i>
+                    Type
+                </button>
+            </div>
+        </div>
+        
+        <div class="table-container">
+            <table class="table" id="assetTable">
+                <thead>
+                    <tr>
+                        <th>Asset Name</th>
+                        <th>Type</th>
+                        <th>Ownership (%)</th>
+                        <th>Location</th>
+                        <th>Description</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for asset in assets %}
+                    <tr data-lat="{{ asset.latitude }}" data-lng="{{ asset.longitude }}">
+                        <td class="asset-name font-medium">{{ asset.name }}</td>
+                        <td>
+                            {% if asset.asset_type %}
+                                <span class="asset-type-badge">{{ asset.asset_type }}</span>
+                            {% else %}
+                                <span class="text-gray-500">N/A</span>
+                            {% endif %}
+                        </td>
+                        <td class="asset-ownership">
+                            {% if asset.ownership_1 %}
+                                {{ asset.ownership_1 }}%
+                            {% else %}
+                                <span class="text-gray-500">N/A</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if asset.latitude and asset.longitude %}
+                                <span class="location-coords">{{ asset.latitude|floatformat:3 }}, {{ asset.longitude|floatformat:3 }}</span>
+                            {% else %}
+                                <span class="text-gray-500">No coordinates</span>
+                            {% endif %}
+                        </td>
+                        <td class="description-cell">
+                            {% if asset.description %}
+                                <span title="{{ asset.description }}">{{ asset.description|truncatechars:50 }}</span>
+                            {% else %}
+                                <span class="text-gray-500">No description</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if asset.latitude and asset.longitude %}
+                                <button class="btn btn-info btn-sm zoom-button">
+                                    <i data-lucide="map-pin" width="14" height="14"></i>
+                                    Locate
+                                </button>
+                            {% else %}
+                                <span class="text-gray-500">-</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
 {% else %}
-    <p>No assets associated with this company.</p>
+<div class="card">
+    <div class="card-content text-center" style="padding: var(--space-16);">
+        <i data-lucide="map-pin" width="64" height="64" style="color: var(--primary-400); margin-bottom: var(--space-4);"></i>
+        <h3 style="margin-bottom: var(--space-2);">No assets found</h3>
+        <p style="color: var(--primary-600); margin-bottom: var(--space-6);">This company doesn't have any assets associated with it yet.</p>
+        <a href="{% url 'upload_data' %}" class="btn btn-primary">
+            <i data-lucide="upload" width="16" height="16"></i>
+            Upload Asset Data
+        </a>
+    </div>
+</div>
 {% endif %}
 
+<style>
+.info-item {
+    margin-bottom: var(--space-4);
+}
 
-    <a href="{% url 'home' %}" class="btn btn-secondary mt-3">Back to Home</a>
-</div>
+.info-item:last-child {
+    margin-bottom: 0;
+}
 
+.info-label {
+    display: block;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--primary-600);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: var(--space-1);
+}
+
+.info-value {
+    font-size: 0.875rem;
+    color: var(--primary-900);
+    font-weight: 500;
+}
+
+.metrics-grid {
+    display: grid;
+    gap: var(--space-4);
+}
+
+.metric-item {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+}
+
+.metric-icon {
+    padding: var(--space-2);
+    border-radius: var(--radius-md);
+    flex-shrink: 0;
+}
+
+.metric-label {
+    display: block;
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--primary-600);
+    margin-bottom: var(--space-1);
+}
+
+.metric-value {
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: var(--primary-900);
+}
+
+.asset-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--space-4);
+}
+
+.stat-item {
+    text-align: center;
+}
+
+.stat-number {
+    display: block;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--primary-900);
+    margin-bottom: var(--space-1);
+}
+
+.stat-label {
+    font-size: 0.75rem;
+    color: var(--primary-600);
+    font-weight: 500;
+}
+
+.asset-type-badge {
+    background-color: var(--primary-100);
+    color: var(--primary-700);
+    padding: var(--space-1) var(--space-2);
+    border-radius: var(--radius-sm);
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.location-coords {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    color: var(--primary-600);
+}
+
+.description-cell {
+    max-width: 200px;
+}
+
+.text-gray-500 {
+    color: var(--primary-500);
+}
+</style>
+
+{% endblock %}
+
+{% block extra_js %}
 <script>
-    document.addEventListener("DOMContentLoaded", function () {
-        var map = L.map('mapid').setView([0, 0], 2);
+document.addEventListener("DOMContentLoaded", function () {
+    {% if assets %}
+    // Initialize map
+    var map = L.map('mapid').setView([0, 0], 2);
+    
+    var Esri_WorldImagery = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+        attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
+    });
+
+    var CartoDB_Positron = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+        attribution: '© OpenStreetMap © CARTO',
+        subdomains: 'abcd',
+        maxZoom: 20
+    });
+
+    CartoDB_Positron.addTo(map);
+
+    var baseMaps = {
+        "Light Map": CartoDB_Positron,
+        "Satellite": Esri_WorldImagery
+    };
+
+    L.control.layers(baseMaps).addTo(map);
+
+    // Define asset type icons
+    var icons = {
+        'Mine': L.icon({ iconUrl: '{% static "icons/Mine.png" %}', iconSize: [32, 32] }),
+        'Factory': L.icon({ iconUrl: '{% static "icons/factory.png" %}', iconSize: [32, 32] }),
+        'Smelter': L.icon({ iconUrl: '{% static "icons/Smelter.png" %}', iconSize: [32, 32] }),
+        'Refinery': L.icon({ iconUrl: '{% static "icons/Refinery.png" %}', iconSize: [32, 32] }),
+        'Renewable': L.icon({ iconUrl: '{% static "icons/Renewable.png" %}', iconSize: [32, 32] }),
+        'Energy': L.icon({ iconUrl: '{% static "icons/Oil.png" %}', iconSize: [32, 32] }),
+        'Building': L.icon({ iconUrl: '{% static "icons/building.png" %}', iconSize: [32, 32] }),
+        'Paper': L.icon({ iconUrl: '{% static "icons/Paper.png" %}', iconSize: [32, 32] }),
+        'Office': L.icon({ iconUrl: '{% static "icons/building.png" %}', iconSize: [32, 32] }),
+        'Oil field': L.icon({ iconUrl: '{% static "icons/Oil.png" %}', iconSize: [32, 32] }),
+        'Airport': L.icon({ iconUrl: '{% static "icons/Airport.png" %}', iconSize: [32, 32] }),
+    };
+
+    // Add markers to the map
+    var markers = [];
+    var markerGroup = L.featureGroup();
+    
+    document.querySelectorAll("#assetTable tbody tr").forEach(row => {
+        var lat = parseFloat(row.dataset.lat);
+        var lng = parseFloat(row.dataset.lng);
+        var name = row.querySelector(".asset-name").textContent;
+        var type = row.querySelector("td:nth-child(2)").textContent.trim();
+        var ownership = row.querySelector(".asset-ownership").textContent.trim();
         
-        var Esri_WorldImagery = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-            attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
-        });
+        if (lat && lng && !isNaN(lat) && !isNaN(lng)) {
+            var icon = icons[type] || L.icon({ 
+                iconUrl: '{% static "icons/default.png" %}', 
+                iconSize: [32, 32] 
+            });
 
-        var CartoDB_Positron = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-            attribution: '© OpenStreetMap © CARTO',
-            subdomains: 'abcd',
-            maxZoom: 20
-        });
+            var marker = L.marker([lat, lng], { icon: icon });
+            marker.bindPopup(`
+                <div style="min-width: 200px;">
+                    <h4 style="margin: 0 0 8px 0; color: var(--primary-900);">${name}</h4>
+                    <p style="margin: 0; color: var(--primary-600); font-size: 14px;"><strong>Type:</strong> ${type}</p>
+                    <p style="margin: 0; color: var(--primary-600); font-size: 14px;"><strong>Ownership:</strong> ${ownership}</p>
+                </div>
+            `);
+            
+            markerGroup.addLayer(marker);
+            markers.push({ marker: marker, name: name });
+        }
+    });
 
-        CartoDB_Positron.addTo(map);
+    markerGroup.addTo(map);
 
-        var baseMaps = {
-            "White map": CartoDB_Positron,
-            "Esri World Imagery": Esri_WorldImagery
-        };
+    // Fit map to show all markers
+    if (markerGroup.getLayers().length > 0) {
+        map.fitBounds(markerGroup.getBounds(), { padding: [20, 20] });
+    }
 
-        L.control.layers(baseMaps).addTo(map);
+    // Fit bounds button
+    document.getElementById("fitBounds").addEventListener("click", function() {
+        if (markerGroup.getLayers().length > 0) {
+            map.fitBounds(markerGroup.getBounds(), { padding: [20, 20] });
+        }
+    });
 
-        // Define icons
-        var icons = {
-            'Mine': L.icon({ iconUrl: '{% static "icons/Mine.png" %}', iconSize: [32, 32] }),
-            'Factory': L.icon({ iconUrl: '{% static "icons/factory.png" %}', iconSize: [32, 32] }),
-            'Smelter': L.icon({ iconUrl: '{% static "icons/Smelter.png" %}', iconSize: [32, 32] }),
-            'Refinery': L.icon({ iconUrl: '{% static "icons/Refinery.png" %}', iconSize: [32, 32] }),
-            'Renewable': L.icon({ iconUrl: '{% static "icons/Renewable.png" %}', iconSize: [32, 32] }),
-            'Energy': L.icon({ iconUrl: '{% static "icons/Oil.png" %}', iconSize: [32, 32] }),
-            'Building': L.icon({ iconUrl: '{% static "icons/building.png" %}', iconSize: [32, 32] }),
-            'Paper': L.icon({ iconUrl: '{% static "icons/Paper.png" %}', iconSize: [32, 32] }),
-            'Office': L.icon({ iconUrl: '{% static "icons/building.png" %}', iconSize: [32, 32] }),
-            'Oil field': L.icon({ iconUrl: '{% static "icons/Oil.png" %}', iconSize: [32, 32] }),
-            'Airport': L.icon({ iconUrl: '{% static "icons/Airport.png" %}', iconSize: [32, 32] }),
-        };
-
-        // Add markers to the map
-        var markers = {};
-        document.querySelectorAll("#assetTable tbody tr").forEach(row => {
-            var lat = row.dataset.lat;
-            var lng = row.dataset.lng;
-            var name = row.querySelector(".asset-name").textContent;
-            var type = row.querySelector("td:nth-child(2)").textContent.trim();
-            var icon = icons[type] || L.icon({ iconUrl: '{% static "icons/default.png" %}', iconSize: [32, 32] });
-
-            if (lat && lng) {
-                var marker = L.marker([lat, lng], { icon: icon }).addTo(map);
-                marker.bindPopup(`<b>${name}</b><br>Type: ${type}`);
-                markers[name] = marker;
+    // Zoom to specific asset functionality
+    document.querySelectorAll(".zoom-button").forEach(button => {
+        button.addEventListener("click", function () {
+            var row = this.closest("tr");
+            var lat = parseFloat(row.dataset.lat);
+            var lng = parseFloat(row.dataset.lng);
+            if (lat && lng && !isNaN(lat) && !isNaN(lng)) {
+                map.setView([lat, lng], 15);
+                
+                // Find and open the corresponding marker popup
+                markers.forEach(markerObj => {
+                    var markerLatLng = markerObj.marker.getLatLng();
+                    if (Math.abs(markerLatLng.lat - lat) < 0.0001 && Math.abs(markerLatLng.lng - lng) < 0.0001) {
+                        markerObj.marker.openPopup();
+                    }
+                });
             }
         });
+    });
+    {% endif %}
 
-        // Attach zoom functionality to buttons
-        document.querySelectorAll(".zoom-button").forEach(button => {
-            button.addEventListener("click", function () {
-                var row = this.closest("tr");
-                var lat = row.dataset.lat;
-                var lng = row.dataset.lng;
-                if (lat && lng) {
-                    map.setView([lat, lng], 12);
-                }
-            });
+    // Table sorting functionality
+    let nameSortAscending = true;
+    let ownershipSortAscending = true;
+    let typeSortAscending = true;
+
+    document.getElementById("sortByName").addEventListener("click", function () {
+        sortTable(0, false, nameSortAscending);
+        nameSortAscending = !nameSortAscending;
+        updateSortIcon(this, nameSortAscending);
+    });
+
+    document.getElementById("sortByOwnership").addEventListener("click", function () {
+        sortTable(2, true, ownershipSortAscending);
+        ownershipSortAscending = !ownershipSortAscending;
+        updateSortIcon(this, ownershipSortAscending);
+    });
+
+    document.getElementById("sortByType").addEventListener("click", function () {
+        sortTable(1, false, typeSortAscending);
+        typeSortAscending = !typeSortAscending;
+        updateSortIcon(this, typeSortAscending);
+    });
+
+    function updateSortIcon(button, ascending) {
+        const icon = button.querySelector('i');
+        icon.setAttribute('data-lucide', ascending ? 'arrow-up' : 'arrow-down');
+        lucide.createIcons();
+    }
+
+    function sortTable(columnIndex, isNumeric = false, ascending = true) {
+        let table = document.getElementById("assetTable").getElementsByTagName("tbody")[0];
+        let rows = Array.from(table.getElementsByTagName("tr"));
+
+        rows.sort((a, b) => {
+            let valA = a.cells[columnIndex].textContent.trim();
+            let valB = b.cells[columnIndex].textContent.trim();
+
+            if (isNumeric) {
+                valA = parseFloat(valA.replace('%', '')) || 0;
+                valB = parseFloat(valB.replace('%', '')) || 0;
+            } else {
+                valA = valA.toLowerCase();
+                valB = valB.toLowerCase();
+            }
+
+            return ascending ? (valA > valB ? 1 : -1) : (valA < valB ? 1 : -1);
         });
 
-        // Sorting state
-        let nameSortAscending = true;
-        let ownershipSortAscending = true;
+        // Clear and re-append sorted rows
+        rows.forEach(row => table.appendChild(row));
+    }
 
-        document.getElementById("sortByName").addEventListener("click", function () {
-            sortTable(0, false, nameSortAscending);
-            nameSortAscending = !nameSortAscending;  // Toggle sort order
-            this.innerHTML = nameSortAscending ? "Sort by Name 🔼" : "Sort by Name 🔽";
-        });
-
-        document.getElementById("sortByOwnership").addEventListener("click", function () {
-            sortTable(2, true, ownershipSortAscending);
-            ownershipSortAscending = !ownershipSortAscending;  // Toggle sort order
-            this.innerHTML = ownershipSortAscending ? "Sort by Ownership 🔼" : "Sort by Ownership 🔽";
-        });
-
-        function sortTable(columnIndex, isNumeric = false, ascending = true) {
-            let table = document.getElementById("assetTable").getElementsByTagName("tbody")[0];
-            let rows = Array.from(table.getElementsByTagName("tr"));
-
-            rows.sort((a, b) => {
-                let valA = a.cells[columnIndex].textContent.trim();
-                let valB = b.cells[columnIndex].textContent.trim();
-
-                if (isNumeric) {
-                    valA = parseFloat(valA) || 0;
-                    valB = parseFloat(valB) || 0;
-                } else {
-                    valA = valA.toLowerCase();
-                    valB = valB.toLowerCase();
-                }
-
-                return ascending ? (valA > valB ? 1 : -1) : (valA < valB ? 1 : -1);
-            });
-
-            rows.forEach(row => table.appendChild(row)); // Reorder rows in table
-        }
-
-        // Search functionality
-        document.getElementById("searchInput").addEventListener("input", function () {
-            let filter = this.value.toLowerCase();
-            document.querySelectorAll("#assetTable tbody tr").forEach(row => {
-                let name = row.querySelector(".asset-name").textContent.toLowerCase();
-                row.style.display = name.includes(filter) ? "" : "none";
-            });
+    // Asset search functionality
+    document.getElementById("assetSearchInput").addEventListener("input", function () {
+        let filter = this.value.toLowerCase();
+        document.querySelectorAll("#assetTable tbody tr").forEach(row => {
+            let text = row.textContent.toLowerCase();
+            row.style.display = text.includes(filter) ? "" : "none";
         });
     });
+
+    // Initialize Lucide icons
+    lucide.createIcons();
+});
 </script>
-
-
-
-{% endblock content %}
+{% endblock extra_js %}

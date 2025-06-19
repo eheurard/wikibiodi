@@ -1,80 +1,263 @@
 {% extends 'base.html' %}
 {% load static %}
-{% block content %}
 
-<div class="container">
-    <section class="hero">
-        <div class="hero-content">
-            <h1>Welcome to Wikibiodi</h1>
-            <p>Assess and visualize companies' biodiversity footprints</p>
+{% block title %}Dashboard - Wikibiodi{% endblock %}
+
+{% block breadcrumb %}
+<span>Dashboard</span>
+<i data-lucide="chevron-right" width="16" height="16"></i>
+<span>Companies</span>
+{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="page-header">
+    <h1 class="page-title">Biodiversity Dashboard</h1>
+    <p class="page-subtitle">Monitor and assess companies' environmental impact and biodiversity footprints</p>
+</div>
+
+<!-- Hero Section -->
+<section class="hero">
+    <div class="hero-content">
+        <h1>Welcome to Wikibiodi</h1>
+        <p>Comprehensive biodiversity assessment and visualization platform for sustainable business intelligence</p>
+    </div>
+</section>
+
+<!-- Search Section -->
+<div class="search-container">
+    <div class="search-icon">
+        <i data-lucide="search" width="20" height="20"></i>
+    </div>
+    <input 
+        type="text" 
+        id="searchInput" 
+        class="search-input" 
+        placeholder="Search companies by name, ISIN, ticker, or sector..." 
+        value="{{ query }}"
+    >
+</div>
+
+<!-- Stats Cards -->
+<div class="stats-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: var(--space-6); margin-bottom: var(--space-8);">
+    <div class="card">
+        <div class="card-content">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-600">Total Companies</p>
+                    <p class="text-2xl font-bold text-gray-900">{{ companies.count }}</p>
+                </div>
+                <div class="bg-accent-100 p-3 rounded-lg">
+                    <i data-lucide="building-2" width="24" height="24" style="color: var(--accent-600);"></i>
+                </div>
+            </div>
         </div>
-    </section>
+    </div>
     
-    <h2 class="company-list-title">Select a Company</h2>
+    <div class="card">
+        <div class="card-content">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-600">Active Assets</p>
+                    <p class="text-2xl font-bold text-gray-900">1,247</p>
+                </div>
+                <div class="bg-success-100 p-3 rounded-lg">
+                    <i data-lucide="map-pin" width="24" height="24" style="color: var(--success-600);"></i>
+                </div>
+            </div>
+        </div>
+    </div>
     
-    <form method="get" action="" class="search-form">
-        <input type="text" id="searchInput" class="search-input" placeholder="Search for companies" value="{{ query }}">
-    </form>
+    <div class="card">
+        <div class="card-content">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-600">Avg. Biodiv Score</p>
+                    <p class="text-2xl font-bold text-gray-900">7.2</p>
+                </div>
+                <div class="bg-warning-100 p-3 rounded-lg">
+                    <i data-lucide="trending-up" width="24" height="24" style="color: var(--warning-600);"></i>
+                </div>
+            </div>
+        </div>
+    </div>
     
-    <div class="scrollable-container">
-        <div id="companyAccordion">
-            {% for company in companies %}
-                <div class="company-card">
+    <div class="card">
+        <div class="card-content">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-600">Data Updates</p>
+                    <p class="text-2xl font-bold text-gray-900">42</p>
+                </div>
+                <div class="bg-primary-100 p-3 rounded-lg">
+                    <i data-lucide="refresh-cw" width="24" height="24" style="color: var(--primary-600);"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Companies Section -->
+<div class="card">
+    <div class="card-header">
+        <div class="flex justify-between items-center">
+            <div>
+                <h2 class="card-title">Companies Overview</h2>
+                <p class="text-sm" style="color: var(--primary-600);">Select a company to view detailed biodiversity analysis</p>
+            </div>
+            <a href="{% url 'add_company' %}" class="btn btn-primary">
+                <i data-lucide="plus" width="16" height="16"></i>
+                Add Company
+            </a>
+        </div>
+    </div>
+    
+    <div class="card-content">
+        <div class="scrollable-container">
+            <div class="company-grid" id="companyGrid">
+                {% for company in companies %}
+                <div class="company-card" data-company-name="{{ company.name|lower }}">
                     <button class="company-card-header" type="button" data-target="#collapse{{ company.pk }}">
-                        <h5 class="company-name">
-                            {{ company.name }}
-                        </h5>
-                        <span class="badge">{{ company.company_biodiv.biodiversity_score }}</span>
+                        <div class="company-info">
+                            <h3 class="company-name">{{ company.name }}</h3>
+                            <div class="company-meta">
+                                <strong>Sector:</strong> {{ company.sector }}
+                            </div>
+                            <div class="company-meta">
+                                <strong>Last Update:</strong> {{ company.last_update|date:"M Y" }}
+                            </div>
+                            {% if company.ISIN_number %}
+                            <div class="company-meta">
+                                <strong>ISIN:</strong> {{ company.ISIN_number }}
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="biodiversity-badge">
+                            {% if company.company_biodiv.biodiversity_score %}
+                                {{ company.company_biodiv.biodiversity_score }}
+                            {% else %}
+                                N/A
+                            {% endif %}
+                        </div>
                     </button>
-    
+
                     <div id="collapse{{ company.pk }}" class="company-details">
-                        <div class="details-row">
-                            <div class="detail">
-                                <strong>Sector:</strong> {{ company.sector }}<br>
-                                <strong>Last Update:</strong> {{ company.last_update|date:"Y-m" }}
-                                <a href="{% url 'company_general' company.pk %}" class="btn btn-info">View Details</a>
+                        <div class="details-content">
+                            <div class="detail-row">
+                                <div>
+                                    {% if company.Ticker %}
+                                    <div class="company-meta">
+                                        <strong>Ticker:</strong> {{ company.Ticker }}
+                                    </div>
+                                    {% endif %}
+                                    <div class="company-meta">
+                                        <strong>Assets:</strong> 
+                                        {% with company.assets_owner1.count as asset_count %}
+                                            {{ asset_count }} asset{{ asset_count|pluralize }}
+                                        {% endwith %}
+                                    </div>
+                                </div>
+                                <a href="{% url 'company_general' company.pk %}" class="btn btn-info btn-sm">
+                                    <i data-lucide="eye" width="14" height="14"></i>
+                                    View Details
+                                </a>
                             </div>
                         </div>
                     </div>
                 </div>
-            {% endfor %}
+                {% empty %}
+                <div class="text-center" style="grid-column: 1 / -1; padding: var(--space-16);">
+                    <i data-lucide="building-2" width="64" height="64" style="color: var(--primary-400); margin-bottom: var(--space-4);"></i>
+                    <h3 style="margin-bottom: var(--space-2);">No companies found</h3>
+                    <p style="color: var(--primary-600); margin-bottom: var(--space-6);">Start by adding your first company to begin tracking biodiversity metrics.</p>
+                    <a href="{% url 'add_company' %}" class="btn btn-primary">
+                        <i data-lucide="plus" width="16" height="16"></i>
+                        Add Your First Company
+                    </a>
+                </div>
+                {% endfor %}
+            </div>
         </div>
-    </div>
-    
-    
-    <div class="add-company">
-        <a class="add-company-button" href="{% url 'add_company' %}">Add Company</a>
     </div>
 </div>
 
+<style>
+.stats-grid .card-content {
+    padding: var(--space-6);
+}
 
+.text-2xl {
+    font-size: 1.5rem;
+    line-height: 2rem;
+}
+
+.bg-accent-100 {
+    background-color: var(--accent-100);
+}
+
+.bg-success-100 {
+    background-color: var(--success-100);
+}
+
+.bg-warning-100 {
+    background-color: var(--warning-100);
+}
+
+.bg-primary-100 {
+    background-color: var(--primary-100);
+}
+
+.p-3 {
+    padding: var(--space-3);
+}
+
+.rounded-lg {
+    border-radius: var(--radius-lg);
+}
+
+.text-gray-600 {
+    color: var(--primary-600);
+}
+
+.text-gray-900 {
+    color: var(--primary-900);
+}
+</style>
+
+{% endblock %}
+
+{% block extra_js %}
 <script>
-    document.addEventListener("DOMContentLoaded", function() {
-        // Search filter
-        const searchInput = document.getElementById('searchInput');
-        const companyCards = document.querySelectorAll('.company-card');
+document.addEventListener("DOMContentLoaded", function() {
+    // Search functionality
+    const searchInput = document.getElementById('searchInput');
+    const companyCards = document.querySelectorAll('.company-card');
 
-        searchInput.addEventListener('input', function() {
-            const filter = searchInput.value.toLowerCase();
-            companyCards.forEach(function(card) {
-                const companyName = card.querySelector('.company-name').textContent.toLowerCase();
-                if (companyName.includes(filter)) {
-                    card.style.display = '';
-                } else {
-                    card.style.display = 'none';
-                }
-            });
+    searchInput.addEventListener('input', function() {
+        const filter = searchInput.value.toLowerCase();
+        companyCards.forEach(function(card) {
+            const companyName = card.dataset.companyName;
+            const companyText = card.textContent.toLowerCase();
+            
+            if (companyName.includes(filter) || companyText.includes(filter)) {
+                card.style.display = '';
+            } else {
+                card.style.display = 'none';
+            }
         });
+    });
 
-        // Simple toggle for accordion
-        document.querySelectorAll('.company-card-header').forEach(button => {
-        button.addEventListener('click', function () {
-            const content = this.nextElementSibling;
+    // Company card accordion functionality
+    document.querySelectorAll('.company-card-header').forEach(button => {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            const targetId = this.getAttribute('data-target');
+            const content = document.querySelector(targetId);
             const isActive = content.classList.contains("show");
 
-            // Fermer tous les autres panels
+            // Close all other panels
             document.querySelectorAll('.company-details').forEach(detail => {
-                detail.style.maxHeight = null;
                 detail.classList.remove("show");
             });
 
@@ -82,14 +265,16 @@
                 btn.classList.remove("active");
             });
 
-            // Si ce n'était pas actif, l'ouvrir avec hauteur dynamique
+            // Toggle current panel
             if (!isActive) {
                 content.classList.add("show");
-                content.style.maxHeight = content.scrollHeight + "px";
                 this.classList.add("active");
             }
         });
     });
+
+    // Initialize Lucide icons
+    lucide.createIcons();
 });
 </script>
-{% endblock content %}
+{% endblock %}

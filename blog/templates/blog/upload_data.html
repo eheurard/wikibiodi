@@ -1,42 +1,485 @@
 {% extends 'base.html' %}
 {% load static %}
+
+{% block title %}Upload Data - Wikibiodi{% endblock %}
+
+{% block breadcrumb %}
+<a href="{% url 'home' %}" style="color: var(--primary-600); text-decoration: none;">Dashboard</a>
+<i data-lucide="chevron-right" width="16" height="16"></i>
+<span>Upload Data</span>
+{% endblock %}
+
 {% block content %}
+<!-- Page Header -->
+<div class="page-header">
+    <h1 class="page-title">Data Upload Center</h1>
+    <p class="page-subtitle">Import your company and asset data using Excel or CSV files</p>
+</div>
 
-{% if messages %}
-<div id="message-container">
-    {% for message in messages %}
-        <div class="custom-alert {{ message.tags }}">
-            <span class="message-text">{{ message }}</span>
-            <button class="close-alert" onclick="this.parentElement.style.display='none'">✖</button>
+<!-- Upload Grid -->
+<div class="upload-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: var(--space-8); margin-bottom: var(--space-8);">
+    
+    <!-- Asset Upload Card -->
+    <div class="card">
+        <div class="card-header">
+            <div class="flex items-center gap-3">
+                <div class="upload-icon bg-accent-100">
+                    <i data-lucide="map-pin" width="24" height="24" style="color: var(--accent-600);"></i>
+                </div>
+                <div>
+                    <h2 class="card-title">Upload Asset Data</h2>
+                    <p class="text-sm" style="color: var(--primary-600);">Import asset locations and details</p>
+                </div>
+            </div>
         </div>
-    {% endfor %}
+        
+        <div class="card-content">
+            <form method="post" enctype="multipart/form-data" class="upload-form">
+                {% csrf_token %}
+                
+                <div class="upload-area" id="assetUploadArea">
+                    <div class="upload-content">
+                        <i data-lucide="upload-cloud" width="48" height="48" style="color: var(--primary-400); margin-bottom: var(--space-3);"></i>
+                        <h3 class="upload-title">Drop your asset file here</h3>
+                        <p class="upload-subtitle">or click to browse</p>
+                        <input type="file" id="id_asset_file" name="asset_file" accept=".xlsx,.xls,.csv" class="file-input" required>
+                    </div>
+                </div>
+                
+                <div class="file-info" id="assetFileInfo" style="display: none;">
+                    <div class="flex items-center gap-3">
+                        <i data-lucide="file-text" width="20" height="20" style="color: var(--accent-600);"></i>
+                        <div>
+                            <p class="file-name"></p>
+                            <p class="file-size text-sm" style="color: var(--primary-600);"></p>
+                        </div>
+                        <button type="button" class="btn btn-secondary btn-sm" onclick="clearFile('asset')">
+                            <i data-lucide="x" width="14" height="14"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="upload-requirements">
+                    <h4 class="requirements-title">File Requirements:</h4>
+                    <ul class="requirements-list">
+                        <li><i data-lucide="check" width="16" height="16"></i> Excel (.xlsx, .xls) or CSV format</li>
+                        <li><i data-lucide="check" width="16" height="16"></i> Required columns: Name, Owner_1</li>
+                        <li><i data-lucide="check" width="16" height="16"></i> Optional: latitude, longitude, Asset type, Ownership, description</li>
+                        <li><i data-lucide="check" width="16" height="16"></i> Maximum file size: 10MB</li>
+                    </ul>
+                </div>
+                
+                <div class="upload-actions">
+                    <button type="button" class="btn btn-secondary" onclick="downloadTemplate('asset')">
+                        <i data-lucide="download" width="16" height="16"></i>
+                        Download Template
+                    </button>
+                    <button type="submit" name="asset_upload" class="btn btn-primary">
+                        <i data-lucide="upload" width="16" height="16"></i>
+                        Upload Assets
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Company Upload Card -->
+    <div class="card">
+        <div class="card-header">
+            <div class="flex items-center gap-3">
+                <div class="upload-icon bg-primary-100">
+                    <i data-lucide="building-2" width="24" height="24" style="color: var(--primary-600);"></i>
+                </div>
+                <div>
+                    <h2 class="card-title">Upload Company Data</h2>
+                    <p class="text-sm" style="color: var(--primary-600);">Import company information and details</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card-content">
+            <form method="post" enctype="multipart/form-data" class="upload-form">
+                {% csrf_token %}
+                
+                <div class="upload-area" id="companyUploadArea">
+                    <div class="upload-content">
+                        <i data-lucide="upload-cloud" width="48" height="48" style="color: var(--primary-400); margin-bottom: var(--space-3);"></i>
+                        <h3 class="upload-title">Drop your company file here</h3>
+                        <p class="upload-subtitle">or click to browse</p>
+                        <input type="file" id="id_company_file" name="company_file" accept=".xlsx,.xls,.csv" class="file-input" required>
+                    </div>
+                </div>
+                
+                <div class="file-info" id="companyFileInfo" style="display: none;">
+                    <div class="flex items-center gap-3">
+                        <i data-lucide="file-text" width="20" height="20" style="color: var(--primary-600);"></i>
+                        <div>
+                            <p class="file-name"></p>
+                            <p class="file-size text-sm" style="color: var(--primary-600);"></p>
+                        </div>
+                        <button type="button" class="btn btn-secondary btn-sm" onclick="clearFile('company')">
+                            <i data-lucide="x" width="14" height="14"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="upload-requirements">
+                    <h4 class="requirements-title">File Requirements:</h4>
+                    <ul class="requirements-list">
+                        <li><i data-lucide="check" width="16" height="16"></i> Excel (.xlsx, .xls) or CSV format</li>
+                        <li><i data-lucide="check" width="16" height="16"></i> Required columns: Nom de l'entreprise, Secteur</li>
+                        <li><i data-lucide="check" width="16" height="16"></i> Optional: Numéro ISIN, Ticker</li>
+                        <li><i data-lucide="check" width="16" height="16"></i> Maximum file size: 10MB</li>
+                    </ul>
+                </div>
+                
+                <div class="upload-actions">
+                    <button type="button" class="btn btn-secondary" onclick="downloadTemplate('company')">
+                        <i data-lucide="download" width="16" height="16"></i>
+                        Download Template
+                    </button>
+                    <button type="submit" name="company_upload" class="btn btn-primary">
+                        <i data-lucide="upload" width="16" height="16"></i>
+                        Upload Companies
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
 </div>
-{% endif %}
 
-<div class="container">
-    <h2>Upload Data</h2>
-
-    <!-- Upload Assets -->
-    <h3>Upload Asset List</h3>
-    <form method="post" enctype="multipart/form-data">
-        {% csrf_token %}
-        {{ asset_form.as_p }}
-        <button type="submit" class="btn btn-primary" name="asset_upload">Upload Assets</button>
-    </form>
-
-    <hr>
-
-    <!-- Upload Companies -->
-    <h3>Upload Company List</h3>
-    <form method="post" enctype="multipart/form-data">
-        {% csrf_token %}
-        {{ company_form.as_p }}
-        <button type="submit" class="btn btn-primary" name="company_upload">Upload Companies</button>
-    </form>
+<!-- Upload History / Status -->
+<div class="card">
+    <div class="card-header">
+        <h2 class="card-title">
+            <i data-lucide="clock" width="20" height="20" style="margin-right: var(--space-2);"></i>
+            Upload Guidelines
+        </h2>
+    </div>
+    <div class="card-content">
+        <div class="guidelines-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: var(--space-6);">
+            
+            <div class="guideline-item">
+                <div class="guideline-icon bg-success-100">
+                    <i data-lucide="file-check" width="24" height="24" style="color: var(--success-600);"></i>
+                </div>
+                <div>
+                    <h3 class="guideline-title">Data Quality</h3>
+                    <p class="guideline-text">Ensure your data is clean and follows the required format. Missing required fields will cause upload errors.</p>
+                </div>
+            </div>
+            
+            <div class="guideline-item">
+                <div class="guideline-icon bg-warning-100">
+                    <i data-lucide="alert-triangle" width="24" height="24" style="color: var(--warning-600);"></i>
+                </div>
+                <div>
+                    <h3 class="guideline-title">Duplicate Handling</h3>
+                    <p class="guideline-text">Duplicate entries will be automatically detected and skipped. Check the upload results for details.</p>
+                </div>
+            </div>
+            
+            <div class="guideline-item">
+                <div class="guideline-icon bg-primary-100">
+                    <i data-lucide="shield-check" width="24" height="24" style="color: var(--primary-600);"></i>
+                </div>
+                <div>
+                    <h3 class="guideline-title">Data Security</h3>
+                    <p class="guideline-text">Your uploaded files are processed securely and are not stored permanently on our servers.</p>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
+<style>
+.upload-grid {
+    margin-bottom: var(--space-8);
+}
 
+.upload-icon {
+    padding: var(--space-3);
+    border-radius: var(--radius-lg);
+    flex-shrink: 0;
+}
 
+.upload-area {
+    border: 2px dashed var(--primary-300);
+    border-radius: var(--radius-lg);
+    padding: var(--space-8);
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+    margin-bottom: var(--space-4);
+}
 
+.upload-area:hover {
+    border-color: var(--accent-500);
+    background-color: var(--accent-50);
+}
 
-{% endblock content %}
+.upload-area.dragover {
+    border-color: var(--accent-500);
+    background-color: var(--accent-50);
+    transform: scale(1.02);
+}
+
+.upload-content {
+    pointer-events: none;
+}
+
+.upload-title {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: var(--primary-900);
+    margin-bottom: var(--space-2);
+}
+
+.upload-subtitle {
+    color: var(--primary-600);
+    font-size: 0.875rem;
+}
+
+.file-input {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    cursor: pointer;
+}
+
+.file-info {
+    background-color: var(--primary-50);
+    border: 1px solid var(--primary-200);
+    border-radius: var(--radius-md);
+    padding: var(--space-4);
+    margin-bottom: var(--space-4);
+}
+
+.file-name {
+    font-weight: 500;
+    color: var(--primary-900);
+    margin: 0;
+}
+
+.file-size {
+    margin: 0;
+}
+
+.upload-requirements {
+    background-color: var(--primary-50);
+    border-radius: var(--radius-md);
+    padding: var(--space-4);
+    margin-bottom: var(--space-6);
+}
+
+.requirements-title {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--primary-900);
+    margin-bottom: var(--space-3);
+}
+
+.requirements-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.requirements-list li {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-size: 0.875rem;
+    color: var(--primary-700);
+    margin-bottom: var(--space-2);
+}
+
+.requirements-list li:last-child {
+    margin-bottom: 0;
+}
+
+.requirements-list li i {
+    color: var(--success-600);
+    flex-shrink: 0;
+}
+
+.upload-actions {
+    display: flex;
+    gap: var(--space-3);
+    justify-content: flex-end;
+}
+
+.guidelines-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: var(--space-6);
+}
+
+.guideline-item {
+    display: flex;
+    gap: var(--space-4);
+    align-items: flex-start;
+}
+
+.guideline-icon {
+    padding: var(--space-3);
+    border-radius: var(--radius-lg);
+    flex-shrink: 0;
+}
+
+.guideline-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--primary-900);
+    margin-bottom: var(--space-2);
+}
+
+.guideline-text {
+    font-size: 0.875rem;
+    color: var(--primary-600);
+    line-height: 1.5;
+    margin: 0;
+}
+
+.bg-accent-50 {
+    background-color: rgba(16, 185, 129, 0.05);
+}
+</style>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    // File upload handling
+    const assetFileInput = document.getElementById('id_asset_file');
+    const companyFileInput = document.getElementById('id_company_file');
+    const assetUploadArea = document.getElementById('assetUploadArea');
+    const companyUploadArea = document.getElementById('companyUploadArea');
+
+    // Asset file handling
+    setupFileUpload(assetFileInput, assetUploadArea, 'asset');
+    setupFileUpload(companyFileInput, companyUploadArea, 'company');
+
+    function setupFileUpload(fileInput, uploadArea, type) {
+        // Click to select file
+        uploadArea.addEventListener('click', function() {
+            fileInput.click();
+        });
+
+        // File selection
+        fileInput.addEventListener('change', function(e) {
+            if (e.target.files.length > 0) {
+                handleFileSelection(e.target.files[0], type);
+            }
+        });
+
+        // Drag and drop
+        uploadArea.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+
+        uploadArea.addEventListener('dragleave', function(e) {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+        });
+
+        uploadArea.addEventListener('drop', function(e) {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                fileInput.files = files;
+                handleFileSelection(files[0], type);
+            }
+        });
+    }
+
+    function handleFileSelection(file, type) {
+        const fileInfo = document.getElementById(type + 'FileInfo');
+        const uploadArea = document.getElementById(type + 'UploadArea');
+        
+        // Validate file type
+        const allowedTypes = ['.xlsx', '.xls', '.csv'];
+        const fileExtension = '.' + file.name.split('.').pop().toLowerCase();
+        
+        if (!allowedTypes.includes(fileExtension)) {
+            alert('Please select a valid Excel or CSV file.');
+            return;
+        }
+
+        // Validate file size (10MB limit)
+        if (file.size > 10 * 1024 * 1024) {
+            alert('File size must be less than 10MB.');
+            return;
+        }
+
+        // Show file info
+        fileInfo.querySelector('.file-name').textContent = file.name;
+        fileInfo.querySelector('.file-size').textContent = formatFileSize(file.size);
+        
+        uploadArea.style.display = 'none';
+        fileInfo.style.display = 'block';
+    }
+
+    function formatFileSize(bytes) {
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
+
+    // Clear file function
+    window.clearFile = function(type) {
+        const fileInput = document.getElementById('id_' + type + '_file');
+        const fileInfo = document.getElementById(type + 'FileInfo');
+        const uploadArea = document.getElementById(type + 'UploadArea');
+        
+        fileInput.value = '';
+        fileInfo.style.display = 'none';
+        uploadArea.style.display = 'block';
+    };
+
+    // Download template function
+    window.downloadTemplate = function(type) {
+        if (type === 'asset') {
+            // Create asset template
+            const csvContent = "Name,Owner_1,latitude,longitude,Asset type,Ownership,description,Water_score,biodiv_score,social_score\n" +
+                             "Sample Asset,Sample Company,45.5017,2.3200,Mine,75.5,Sample asset description,8.2,7.5,6.8\n" +
+                             "Another Asset,Another Company,48.8566,2.3522,Factory,100,Another description,7.1,8.3,7.9";
+            downloadCSV(csvContent, 'asset_template.csv');
+        } else if (type === 'company') {
+            // Create company template
+            const csvContent = "Nom de l'entreprise,Numéro ISIN,Ticker,Secteur\n" +
+                             "Sample Company,FR0000120271,MC,Technology\n" +
+                             "Another Company,US0378331005,AAPL,Technology";
+            downloadCSV(csvContent, 'company_template.csv');
+        }
+    };
+
+    function downloadCSV(content, filename) {
+        const blob = new Blob([content], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        const url = URL.createObjectURL(blob);
+        
+        link.setAttribute('href', url);
+        link.setAttribute('download', filename);
+        link.style.visibility = 'hidden';
+        
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+
+    // Initialize Lucide icons
+    lucide.createIcons();
+});
+</script>
+{% endblock %}
