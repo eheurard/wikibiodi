@@ -3,13 +3,14 @@
 
 {% block title %}{{ company.name }} - Company Details{% endblock %}
 
+{% block content %}
+
 {% block breadcrumb %}
 <a href="{% url 'home' %}" style="color: var(--primary-600); text-decoration: none;">Dashboard</a>
 <i data-lucide="chevron-right" width="16" height="16"></i>
 <span>{{ company.name }}</span>
 {% endblock %}
 
-{% block content %}
 <!-- Page Header -->
 <div class="page-header">
     <div class="flex justify-between items-start">

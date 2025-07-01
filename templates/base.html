@@ -24,92 +24,26 @@
 </head>
 <body>
     <div class="app-container">
-        <!-- Sidebar -->
-        <aside class="sidebar" id="sidebar">
-            <div class="sidebar-header">
-                <a href="{% url 'home' %}" class="logo">
-                    <i data-lucide="leaf" class="nav-icon"></i>
-                    Wikibiodi
-                </a>
-            </div>
-            
-            <nav class="sidebar-nav">
-                <div class="nav-section">
-                    <div class="nav-section-title">Main</div>
-                    <a href="{% url 'home' %}" class="nav-link {% if request.resolver_match.url_name == 'home' %}active{% endif %}">
-                        <i data-lucide="home" class="nav-icon"></i>
-                        Dashboard
-                    </a>
-                    <a href="#" class="nav-link">
-                        <i data-lucide="building-2" class="nav-icon"></i>
-                        Companies
-                    </a>
-                    <a href="#" class="nav-link">
-                        <i data-lucide="map" class="nav-icon"></i>
-                        Global Map
-                    </a>
-                </div>
-                
-                <div class="nav-section">
-                    <div class="nav-section-title">Data Management</div>
-                    <a href="{% url 'upload_data' %}" class="nav-link {% if request.resolver_match.url_name == 'upload_data' %}active{% endif %}">
-                        <i data-lucide="upload" class="nav-icon"></i>
-                        Upload Data
-                    </a>
-                    <a href="{% url 'add_company' %}" class="nav-link {% if request.resolver_match.url_name == 'add_company' %}active{% endif %}">
-                        <i data-lucide="plus-circle" class="nav-icon"></i>
-                        Add Company
-                    </a>
-                    <a href="#" class="nav-link">
-                        <i data-lucide="download" class="nav-icon"></i>
-                        Export Data
-                    </a>
-                </div>
-                
-                <div class="nav-section">
-                    <div class="nav-section-title">Analytics</div>
-                    <a href="#" class="nav-link">
-                        <i data-lucide="bar-chart-3" class="nav-icon"></i>
-                        Reports
-                    </a>
-                    <a href="#" class="nav-link">
-                        <i data-lucide="trending-up" class="nav-icon"></i>
-                        Trends
-                    </a>
-                    <a href="#" class="nav-link">
-                        <i data-lucide="pie-chart" class="nav-icon"></i>
-                        Insights
-                    </a>
-                </div>
-                
-                {% if user.is_authenticated %}
-                <div class="nav-section">
-                    <div class="nav-section-title">Account</div>
-                    <a href="#" class="nav-link">
-                        <i data-lucide="user" class="nav-icon"></i>
-                        Profile
-                    </a>
-                    <a href="#" class="nav-link">
-                        <i data-lucide="settings" class="nav-icon"></i>
-                        Settings
-                    </a>
-                    <a href="{% url 'logout' %}" class="nav-link">
-                        <i data-lucide="log-out" class="nav-icon"></i>
-                        Logout
-                    </a>
-                </div>
-                {% endif %}
-            </nav>
-        </aside>
+        <!-- Sidebar (only for company pages) -->
+        {% block sidebar %}{% endblock %}
 
         <!-- Main Content -->
-        <main class="main-content" id="mainContent">
+        <main class="main-content {% block main_content_class %}{% endblock %}" id="mainContent">
             <!-- Top Navigation -->
             <header class="top-nav">
                 <div class="nav-left">
-                    <button class="menu-toggle" id="menuToggle">
+                    {% block nav_left %}
+                    <button class="menu-toggle" id="menuToggle" style="display: none;">
                         <i data-lucide="menu" width="20" height="20"></i>
                     </button>
+                    {% endblock %}
+                    
+                    <div class="logo-section">
+                        <a href="{% url 'home' %}" class="logo-link">
+                            <i data-lucide="leaf" width="24" height="24" style="color: var(--accent-600);"></i>
+                            <span class="logo-text">Wikibiodi</span>
+                        </a>
+                    </div>
                     
                     <nav class="breadcrumb">
                         {% block breadcrumb %}
@@ -119,6 +53,17 @@
                 </div>
                 
                 <div class="nav-right">
+                    <div class="nav-actions">
+                        <a href="{% url 'home' %}" class="btn btn-secondary btn-sm nav-btn">
+                            <i data-lucide="home" width="16" height="16"></i>
+                            <span class="btn-text">Home</span>
+                        </a>
+                        <a href="{% url 'upload_data' %}" class="btn btn-primary btn-sm nav-btn">
+                            <i data-lucide="upload" width="16" height="16"></i>
+                            <span class="btn-text">Upload Data</span>
+                        </a>
+                    </div>
+                    
                     {% if user.is_authenticated %}
                         <div class="user-info">
                             <span class="text-sm">Welcome, {{ user.username }}</span>
@@ -165,54 +110,6 @@
 
     <!-- JavaScript -->
     <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
-    
-    <script>
-        // Initialize Lucide icons
-        lucide.createIcons();
-        
-        // Sidebar toggle functionality
-        document.addEventListener('DOMContentLoaded', function() {
-            const menuToggle = document.getElementById('menuToggle');
-            const sidebar = document.getElementById('sidebar');
-            const mainContent = document.getElementById('mainContent');
-            
-            menuToggle.addEventListener('click', function() {
-                sidebar.classList.toggle('collapsed');
-                mainContent.classList.toggle('expanded');
-            });
-            
-            // Auto-close sidebar on mobile when clicking outside
-            document.addEventListener('click', function(event) {
-                if (window.innerWidth <= 768) {
-                    if (!sidebar.contains(event.target) && !menuToggle.contains(event.target)) {
-                        sidebar.classList.add('collapsed');
-                        mainContent.classList.add('expanded');
-                    }
-                }
-            });
-            
-            // Handle window resize
-            window.addEventListener('resize', function() {
-                if (window.innerWidth <= 768) {
-                    sidebar.classList.add('collapsed');
-                    mainContent.classList.add('expanded');
-                } else {
-                    sidebar.classList.remove('collapsed');
-                    mainContent.classList.remove('expanded');
-                }
-            });
-            
-            // Auto-hide alerts after 5 seconds
-            const alerts = document.querySelectorAll('.alert');
-            alerts.forEach(alert => {
-                setTimeout(() => {
-                    if (alert.parentElement) {
-                        alert.remove();
-                    }
-                }, 5000);
-            });
-        });
-    </script>
     
     {% block extra_js %}{% endblock %}
 </body>
